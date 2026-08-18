@@ -6,9 +6,15 @@
 <p>مستقیم از مرورگر — بدون نیاز به نصب — با اسکن دومرحله‌ای دقیق</p>
 
 <p>
-  <a href="https://codewave4.github.io/Scanner/"><img src="https://img.shields.io/badge/%F0%9F%8C%90_%D8%AF%D9%85%D9%88_%D8%A2%D9%86%D9%84%D8%A7%DB%8C%D9%86-3B82F6?style=for-the-badge&logo=githubpages&logoColor=white" alt="Demo"/></a>
-  <a href="https://t.me/RedProjectX"><img src="https://img.shields.io/badge/%E2%9C%88_%DA%A9%D8%A7%D9%86%D8%A7%D9%84_%D8%AA%D9%84%DA%AF%D8%B1%D8%A7%D9%85-229ED9?style=for-the-badge&logo=telegram&logoColor=white" alt="Telegram"/></a>
-  <a href="#-آموزش-fragment--fingerprint-با-pattng"><img src="https://img.shields.io/badge/%F0%9F%93%B1_%D8%A2%D9%85%D9%88%D8%B2%D8%B4_PattNG-22C55E?style=for-the-badge&logo=android&logoColor=white" alt="Tutorial"/></a>
+  <a href="https://codewave4.github.io/Scanner/">
+    <img src="https://img.shields.io/badge/%F0%9F%8C%90_%D8%AF%D9%85%D9%88_%D8%A2%D9%86%D9%84%D8%A7%DB%8C%D9%86-3B82F6?style=for-the-badge&logo=githubpages&logoColor=white" alt="Demo"/>
+  </a>
+  <a href="https://t.me/RedProjectX">
+    <img src="https://img.shields.io/badge/%E2%9C%88_%DA%A9%D8%A7%D9%86%D8%A7%D9%84_%D8%AA%D9%84%DA%AF%D8%B1%D8%A7%D9%85-229ED9?style=for-the-badge&logo=telegram&logoColor=white" alt="Telegram"/>
+  </a>
+  <a href="#-آموزش-استفاده-با-pattng">
+    <img src="https://img.shields.io/badge/%F0%9F%93%B1_%D8%A2%D9%85%D9%88%D8%B2%D8%B4_PattNG-22C55E?style=for-the-badge&logo=android&logoColor=white" alt="Tutorial"/>
+  </a>
 </p>
 
 <br>
@@ -77,12 +83,10 @@
 
 ## 🧠 اسکنر چطور کار می‌کند؟
 
-```
 ┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
 │ کالیبراسیون  │ →  │   فاز ۱     │ →  │   فاز ۲     │ →  │ نتایج نهایی │
 │ پینگ پایه    │    │ غربالگری    │    │ تأیید نهایی │    │  + نشان 🛡️ │
 └─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
-```
 
 ### 1️⃣ کالیبراسیون پینگ پایه
 پینگ پایه شبکه شما با `1.1.1.1` سنجیده می‌شود تا امتیازها نسبی باشند.
@@ -92,11 +96,6 @@ IP های تصادفی از ۱۲ رنج رسمی کلادفلر تست می‌ش
 
 ### 3️⃣ فاز ۲ — تأیید نهایی (فقط برای برترها)
 ۲۰ آی‌پی برتر با ۴ تست تکراری + پورت دوم (2053) بررسی می‌شوند.
-
-### 4️⃣ امتیازدهی هوشمند
-```
-امتیاز = (درصد موفقیت × 60%) + (کیفیت تاخیر × 25%) + (پایداری × 15%)
-~~~
 
 > 🚫 آی‌پی‌هایی که پاسخ‌های سریع مصنوعی (RST فیلترینگ) یا jitter وحشتناک می‌دهند، به‌صورت خودکار حذف یا محدود می‌شوند.
 
@@ -134,30 +133,30 @@ IP های تصادفی از ۱۲ رنج رسمی کلادفلر تست می‌ش
 
 ---
 
-## 📱 آموزش fragment + fingerprint (جایگزین sni-spoofing) با PattNG
+## 📱 آموزش استفاده با PattNG
 
-**رفع فیلتر دامنه و رفع محدودیت آپلود برای کانفیگ‌های کلادفلر (ورکر / CDN) بر روی اندروید**
+> 💡 **بعد از اسکن، بهترین کار اینه که IP های تمیز رو وارد برنامه PattNG کنین تا بهترین عملکرد رو داشته باشین.**
 
-> 💡 بعد از اسکن، بهترین کار اینه که IP های تمیز رو وارد برنامه **PattNG** کنین تا بهترین عملکرد رو داشته باشین. این اپ کاملاً مشابه **v2rayNG** میباشد و صرفاً امکانات اضافی مورد نیاز به آن اضافه شده است.
+### چرا PattNG؟
 
-### 🖼 تصاویر آموزش
+**PattNG** یکی از بهترین ابزارهای اندروید برای مدیریت کانفیگ‌های کلادفلر، ورکر و CDN است که با ترکیب IP تمیز این اسکنر، می‌تونین:
 
-<div align="center">
-<table>
-<tr>
-<th>لیست کانفیگ‌ها</th>
-<th>ویرایش کانفیگ (fragment + fingerprint)</th>
-</tr>
-<tr>
-<td><img src="assets/pattng-configs.png" width="260" alt="PattNG configs"/></td>
-<td><img src="assets/pattng-edit.png" width="560" alt="PattNG edit"/></td>
-</tr>
-</table>
-</div>
+- ✅ فیلتر دامنه رو دور بزنین
+- ✅ محدودیت آپلود کانفیگ‌های کلادفلر رو رفع کنین
+- ✅ عملکرد ورکرها رو به حداکثر برسونین
 
-### 📝 مراحل انجام کار
+### 🎯 مراحل سریع
 
-**مرحله ۱:** ابتدا اپ **PattNG** را نصب کنید:
+```mermaid
+graph LR
+    A[اسکن IP] -->|کپی IP های ۹۰+ 🛡️| B[دانلود PattNG]
+    B -->|نصب| C[وارد کردن IP]
+    C -->|کانفیگ| D[اتصال سریع و پایدار]
+```
+
+**مرحله ۱:** اسکن را اجرا کنید و IP های با امتیاز **۹۰+** (دارای نشان 🛡️) را کپی کنید.
+
+**مرحله ۲:** برنامه **PattNG** را از گیت‌هاب دانلود کنید:
 
 <div align="center">
 <a href="https://github.com/patterniha/PattNG/releases">
@@ -165,29 +164,11 @@ IP های تصادفی از ۱۲ رنج رسمی کلادفلر تست می‌ش
 </a>
 </div>
 
-🔗 https://github.com/patterniha/PattNG/releases
+🔗 لینک مستقیم: https://github.com/patterniha/PattNG/releases
 
-**مرحله ۲:** کانفیگ خود را وارد برنامه کنید و **edit** (علامت مداد ✏️) را بزنید.
+**مرحله ۳:** IP ها را داخل برنامه وارد کنید.
 
-**مرحله ۳:** در قسمت **address** مقدار `188.114.97.6` و یا هر آیپی سالم دیگر کلادفلر را وارد کنید.
-
-**مرحله ۴:** در قسمت **finalMask** کل عبارت زیر را وارد کنید:
-
-```json
-{"tcp": [{"type": "fragment", "settings": {"packets": "tlshello", "lengths": ["5", "94", "1"], "delays": ["0"], "maxSplit": "0"}},{"type": "fragment", "settings": {"packets": "1-1", "lengths": ["109", "1"], "delays": ["1"], "maxSplit": "355"}}]}
-```
-
-**مرحله ۵:** نوع فینگرپرینت (**fingerprint**) را روی `unsafe` انتخاب کنید.
-
-**مرحله ۶:** در قسمت **cipherSuites** کل عبارت زیر را وارد کنید:
-
-~~~
-TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA:TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA:TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
-```
-
-**مرحله ۷:** سیو کنید و تمام ✅
-
-### 📖 آموزش ویدیویی کامل (تلگرام)
+**مرحله ۴:** برای تنظیمات پیشرفته (کانفیگ ورکر / CDN / رفع محدودیت آپلود) آموزش کامل را ببینید:
 
 <div align="center">
 <a href="https://t.me/patt_channel_x/94?single">
@@ -195,7 +176,7 @@ TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_E
 </a>
 </div>
 
-🔗 https://t.me/patt_channel_x/94?single
+🔗 لینک آموزش: https://t.me/patt_channel_x/94?single
 
 ---
 
@@ -209,7 +190,7 @@ TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_E
 <details>
 <summary><b>❔ چرا همه نتایج زرد یا قرمزن؟</b></summary>
 <br>یعنی از سمت شبکه شما اکثر رنج‌ها محدود (throttle) شدن. این راه‌حل‌ها رو امتحان کن:
-- تعداد کل IP ها رو بیشتر کن (۱۰۰ تا ۲۰۰۰)
+- تعداد کل IP ها رو بیشتر کن (۱۰۰۰ تا ۲۰۰۰)
 - در ساعات خلوت‌تر (بامداد) اسکن کن
 - از IP های ذخیره‌شده قبلی استفاده کن
 </details>
@@ -223,24 +204,21 @@ TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_E
 <summary><b>❔ چطور رنج سفارشی اضافه کنم؟</b></summary>
 <br>در تنظیمات اسکن، منبع IP را روی «رنج سفارشی» بگذار و رنج‌ها را به فرمت CIDR یا IP وارد کنید:
 
-```
-198.41.223.0/24
-104.16.0.0/20
-172.64.10.7
-```
+### 4️⃣ امتیازدهی هوشمند
+
 </details>
 
 <details>
 <summary><b>❔ بهترین پورت برای تست کدومه؟</b></summary>
-<br>پورت‌های پشتیبانی‌شده: <b>443, 2053, 2083, 2087, 2096, 8443</b> — پورت <b>443</b> پیش‌فرض و در اکثر مواقع بهترین گزینه است.
+<br>پورت‌های پشتیبانی‌شده: **443, 2053, 2083, 2087, 2096, 8443** — پورت **443** پیش‌فرض و در اکثر مواقع بهترین گزینه است.
 </details>
 
 ---
 
-## 🖼 اسکرین‌شات اسکنر
+## 🖼 اسکرین‌شات
 
 <div align="center">
-<i>📸 اسکرین‌شات‌های اسکنر به‌زودی اضافه می‌شوند...</i>
+<i>📸 اسکرین‌شات‌ها به‌زودی اضافه می‌شوند...</i>
 </div>
 
 ---
