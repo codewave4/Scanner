@@ -72,13 +72,19 @@ input[type=range]{width:100%;accent-color:var(--blue);margin-top:8px}
 .dist .bar{flex:1;height:7px;background:var(--card2);border-radius:6px;overflow:hidden}
 .dist .bar i{display:block;height:100%;border-radius:6px}
 .dist .pc{width:34px;text-align:left}
-table{width:100%;border-collapse:collapse;font-size:12.5px}
-th{color:var(--muted);font-weight:500;text-align:center;padding:8px 4px;border-bottom:1px solid var(--line)}
-td{padding:10px 4px;text-align:center;border-bottom:1px solid var(--line)}
-td.ip{direction:ltr;font-weight:700}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{color:var(--muted);font-weight:500;text-align:center;padding:8px 3px;border-bottom:1px solid var(--line);font-size:10.5px}
+td{padding:10px 3px;text-align:center;border-bottom:1px solid var(--line)}
+td.ip{direction:ltr;font-weight:700;white-space:nowrap}
 .jit{font-size:10px;color:var(--muted);font-weight:400}
 .dotc{width:9px;height:9px;border-radius:50%;display:inline-block}
 .sh{width:12px;height:12px;fill:none;stroke:var(--green);stroke-width:2;vertical-align:-1px;margin-left:3px}
+.cpbtn{background:var(--card2);border:1px solid var(--line);border-radius:6px;color:var(--muted);cursor:pointer;padding:3px 6px;margin-left:6px;vertical-align:middle}
+.cpbtn svg{width:12px;height:12px}
+.cpbtn:active{color:var(--green)}
+.pass{background:rgba(34,197,94,.15);color:var(--green);border:1px solid rgba(34,197,94,.4);border-radius:6px;padding:3px 12px;font-size:10px;font-weight:700}
+.failb{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.3);border-radius:6px;padding:3px 12px;font-size:10px}
+.loss0{color:var(--green);font-weight:700}.loss1{color:var(--yellow);font-weight:700}.loss2{color:var(--red);font-weight:700}
 .acts{display:flex;gap:8px;margin-top:12px}
 .acts button{flex:1;background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:11px;padding:11px;font-family:inherit;font-size:12px;cursor:pointer}
 .hitem{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid var(--line)}
@@ -147,7 +153,7 @@ nav button.on{color:var(--blue)}
    <div id="goodHint" class="muted" style="display:none;margin-top:8px"></div>
   </div>
   <div class="card"><h3>پورت</h3><p class="muted" style="margin-bottom:8px">پورت TLS برای تست (443, 2053, 2083, 2087, 2096, 8443)</p><input type="number" id="portIn" value="443"></div>
-  <div class="card"><h3>تعداد تست هر IP <span class="rv" id="testsVal">3</span></h3><p class="muted" style="margin-bottom:8px">تکرار بیشتر = دقت بالاتر</p>
+  <div class="card"><h3>تعداد تست هر IP <span class="rv" id="testsVal">3</span></h3><p class="muted" style="margin-bottom:8px">تکرار بیشتر = دقت بالاتر + پکت لاست دقیق‌تر</p>
    <div class="seg" id="testsSeg"><button data-v="1">1</button><button data-v="3" class="on">3</button><button data-v="5">5</button><button data-v="10">10</button></div></div>
   <div class="card"><h3>تعداد کل IP ها <span class="rv" id="totalVal">300</span></h3><input type="range" id="totalR" min="50" max="2000" step="50" value="300"></div>
   <div class="card"><h3>اتصال همزمان (Threads) <span class="rv" id="thrVal">200</span></h3><p class="muted">برای دقت اندازه‌گیری، در فاز ۱ حداکثر ۶۰ اعمال می‌شود</p><input type="range" id="thrR" min="50" max="300" step="10" value="200"></div>
@@ -182,15 +188,16 @@ nav button.on{color:var(--blue)}
 <section id="page-results" class="page">
  <div class="ptitle">نتایج اسکن</div>
  <div class="seg" style="margin-bottom:9px" id="resFilter">
-  <button data-f="all" class="on">همه</button><button data-f="ok">موفق</button><button data-f="top">فقط برترها</button>
+  <button data-f="all" class="on">همه</button><button data-f="ok">موفق</button><button data-f="top">فقط پاس‌شده‌ها</button>
  </div>
  <div class="seg" style="margin-bottom:11px" id="resSort">
   <button data-s="mix" class="on">ترکیبی (رتبه+پینگ)</button><button data-s="ping">پینگ کمتر</button><button data-s="score">امتیاز بیشتر</button>
  </div>
- <div class="card" style="padding:6px 10px">
-  <table><thead><tr><th>IP</th><th>پینگ</th><th>امتیاز</th><th>وضعیت</th></tr></thead><tbody id="resBody"></tbody></table>
+ <div class="card" style="padding:6px 8px;overflow-x:auto">
+  <table><thead><tr><th>#</th><th>IP</th><th>امتیاز</th><th>پینگ</th><th>پکت لاست</th><th>سرعت</th><th>وضعیت</th></tr></thead><tbody id="resBody"></tbody></table>
  </div>
- <div class="acts"><button onclick="shareRes()">اشتراک گذاری</button><button onclick="saveRes()">ذخیره</button><button onclick="copyRes()">کپی</button></div>
+ <p class="muted" style="text-align:center;margin-top:6px">سرعت تخمینی مرورگر است؛ تست واقعی هسته Xray فقط در اپ PattNG ممکن است</p>
+ <div class="acts"><button onclick="shareRes()">اشتراک گذاری</button><button onclick="saveRes()">ذخیره</button><button onclick="copyRes()">کپی همه</button></div>
  <p class="muted" style="text-align:center;margin-top:10px" id="resCount">تعداد: 0</p>
 </section>
 
@@ -219,15 +226,15 @@ nav button.on{color:var(--blue)}
 
 <div class="modal" id="aboutModal" onclick="if(event.target===this)this.classList.remove('show')">
  <div class="mbox">
-  <div class="mhead"><div class="mlogo"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></div><div><h2>اسکنر IP کلادفلر</h2><div class="ver">نسخه 4.3 — نسخه وب (GitHub Pages)</div></div></div>
+  <div class="mhead"><div class="mlogo"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></div><div><h2>اسکنر IP کلادفلر</h2><div class="ver">نسخه 4.4 — نسخه وب (GitHub Pages)</div></div></div>
   <p>این برنامه یک اسکنر آنلاین و رایگان برای پیدا کردن IP تمیز و پایدار کلادفلر است که بدون نیاز به نصب، مستقیم داخل مرورگر اجرا می‌شود.</p>
   <p>✦ اسکن دومرحله‌ای: غربالگری سریع + تأیید نهایی دقیق<br>
   ✦ امتیازدهی هوشمند بر اساس موفقیت، پینگ و پایداری<br>
+  ✦ نمایش پکت لاست و سرعت تخمینی هر IP<br>
+  ✦ بج «پاس» برای IP های تأییدشده + دکمه کپی هر IP<br>
   ✦ تشخیص آی‌پی‌های نیمه‌مسدود و حذف نتایج خطادار<br>
-  ✦ کالیبراسیون با پینگ پایه شبکه شما<br>
   ✦ حافظه IP‌های خوب برای اسکن‌های بعدی<br>
-  ✦ پشتیبانی از رنج سفارشی (CIDR) و پورت‌های TLS<br>
-  ✦ خروجی کپی، فایل CSV و اشتراک‌گذاری</p>
+  ✦ پشتیبانی از رنج سفارشی (CIDR) و پورت‌های TLS</p>
   <p>ساخته‌شده با ❤️ برای دور زدن محدودیت‌ها</p>
   <button class="btn tg" onclick="openTelegram()">عضویت در کانال تلگرام</button>
   <button class="btn red" onclick="document.getElementById('aboutModal').classList.remove('show')">بستن</button>
@@ -237,8 +244,8 @@ nav button.on{color:var(--blue)}
 <div class="modal" id="trainModal" onclick="if(event.target===this)this.classList.remove('show')">
  <div class="mbox">
   <div class="mhead"><div class="mlogo" style="background:linear-gradient(90deg,#229ed9,#3b82f6)"><svg viewBox="0 0 24 24"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div><div><h2>آموزش استفاده</h2><div class="ver">PattNG + IP تمیز کلادفلر</div></div></div>
-  <p>بعد از اسکن، بهتره IP‌های تمیز رو از بخش «نتایج» کپی کنین و وارد برنامه <b>PattNG</b> کنین تا بهترین عملکرد رو داشته باشین.</p>
-  <p>با این آموزش می‌تونین روی اندروید:<br>✦ فیلتر دامنه رو دور بزنین<br>✦ محدودیت آپلود رو برای کانفیگ‌های کلادفلر (ورکر / CDN) رفع کنین</p>
+  <p>بعد از اسکن، بهتره IP‌های تمیز (بج سبز «پاس») رو با دکمه کپی بردارین و وارد برنامه <b>PattNG</b> کنین تا بهترین عملکرد رو داشته باشین.</p>
+  <p>با این آموزش می‌تونین روی اندروید:<br>✦ فیلتر دامنه رو دور بزنین<br>✦ محدودیت آپلود رو برای کانفیگ‌های کلادفلر (ورکر / CDN) رفع کنین<br>✦ تست واقعی سرعت با هسته Xray انجام بدین</p>
   <button class="btn" onclick="openPatt()">دانلود PattNG از گیت‌هاب</button>
   <button class="btn tg" onclick="openTrain()">مشاهده آموزش کامل (تلگرام)</button>
   <button class="btn red" onclick="document.getElementById('trainModal').classList.remove('show')">بستن</button>
@@ -259,6 +266,7 @@ const CF_RANGES=['104.16.0.0/13','104.24.0.0/14','108.162.192.0/18','131.0.72.0/
 const GOOD_KEY='cfscan_good';
 const SHIELD='<svg class="sh" viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>';
 const BIC='<span class="bic"><svg class="i" viewBox="0 0 24 24"><path d="M4 18v-1M8 18v-4M12 18v-7M16 18v-10M20 18v-13"/></svg></span>';
+const COPYIC='<svg class="i" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
 const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
@@ -274,6 +282,12 @@ function showTrain(){$('trainModal').classList.add('show')}
 function openTelegram(){window.open('https://t.me/RedProjectX','_blank')}
 function openPatt(){window.open('https://github.com/patterniha/PattNG/releases','_blank')}
 function openTrain(){window.open('https://t.me/patt_channel_x/94?single','_blank')}
+function copyIP(ip){
+ const done=()=>toast('کپی شد: '+ip);
+ if(navigator.clipboard)navigator.clipboard.writeText(ip).then(done).catch(()=>{fallbackCopy(ip);done()});
+ else{fallbackCopy(ip);done()}
+}
+function fallbackCopy(t){const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove()}
 
 function ip2int(ip){return ip.split('.').reduce((a,o)=>((a<<8)+ +o)>>>0,0)>>>0}
 function int2ip(n){return[(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255].join('.')}
@@ -284,6 +298,11 @@ function parseCustom(t){const tk=t.split(/[\s,]+/).filter(Boolean);let out=[];fo
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
 function median(a){if(!a.length)return null;const s=[...a].sort((x,y)=>x-y);const m=s.length>>1;return s.length%2?s[m]:(s[m-1]+s[m])/2}
 function jitterOf(a){if(a.length<2)return 0;const s=[...a].sort((x,y)=>x-y);return s.length>=4?s[s.length-2]-s[1]:s[s.length-1]-s[0]}
+function estSpeed(med,loss,jit){
+ if(med==null)return null;
+ let s=(2500/Math.max(med,40))*(1-loss/100)*(1-Math.min(jit||0,300)/600);
+ return Math.max(0.1,Math.round(s*10)/10);
+}
 
 async function probe(ip,port,toMs){
  const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),toMs);const t0=performance.now();
@@ -323,8 +342,9 @@ async function evalIP(ip){
   await sleep(120);
  }
  const med=median(msArr),jit=jitterOf(msArr);
+ const loss=Math.round((1-ok/Math.max(att,1))*100);
  const susp=isSusp(med,jit);
- return{ip,ping:med?Math.round(med):null,jit:Math.round(jit),score:computeScore(ok/Math.max(att,1),med==null?999:med,jit,susp,null),ok,susp,verified:false};
+ return{ip,ping:med?Math.round(med):null,jit:Math.round(jit),loss,speed:estSpeed(med,loss,jit),score:computeScore(ok/Math.max(att,1),med==null?999:med,jit,susp,null),ok,susp,verified:false};
 }
 async function deepTest(r0){
  const msArr=[];let ok=0;const T=4;
@@ -337,9 +357,11 @@ async function deepTest(r0){
  let port2=null;
  if(S.multiPort&&!stopFlag){const p2=await probe(r0.ip,2053,effTo);port2=p2.ok;if(p2.ok)msArr.push(p2.ms)}
  const med=median(msArr),jit=jitterOf(msArr);
+ const succ=ok/(T+(S.multiPort?1:0));
+ const loss=Math.round((1-succ)*100);
  const susp=isSusp(med,jit);
- const sc=computeScore(ok/(T+(S.multiPort?1:0)),med==null?999:med,jit,susp,port2);
- return Object.assign({},r0,{ping:med?Math.round(med):r0.ping,jit:Math.round(jit),ok:ok+(port2?1:0),verified:sc>=75&&jit<=150&&!susp,susp,score:sc});
+ const sc=computeScore(succ,med==null?999:med,jit,susp,port2);
+ return Object.assign({},r0,{ping:med?Math.round(med):r0.ping,jit:Math.round(jit),loss,speed:estSpeed(med==null?r0.ping:med,loss,jit),ok:ok+(port2?1:0),verified:sc>=75&&jit<=150&&!susp,susp,score:sc});
 }
 async function startScan(){
  if(running)return toast('اسکن در حال اجراست');
@@ -404,10 +426,11 @@ function finish(){
   updGood();
  }
  renderResults();renderHistoryAdd();
- const v=results.filter(r=>r.verified&&r.score>=S.minScore).length;
- toast((stopFlag?'متوقف شد':'اسکن تمام شد')+' — '+v+' IP تأیید شده');
+ const v=results.filter(r=>passed(r)).length;
+ toast((stopFlag?'متوقف شد':'اسکن تمام شد')+' — '+v+' IP پاس شد');
  setTimeout(()=>go('results'),600);
 }
+function passed(r){return r.verified||r.score>=S.minScore}
 function pushChart(ms){chartData.push(ms);if(chartData.length>60)chartData.shift();dist[ms<30?0:ms<50?1:ms<80?2:ms<120?3:4]++;drawChart();renderDist()}
 function drawChart(){
  const c=$('chart'),x=c.getContext('2d');x.clearRect(0,0,600,220);
@@ -438,19 +461,28 @@ function sortedList(l){
  else a.sort((x,y)=>(Math.floor(y.score)-Math.floor(x.score))||((x.ping==null?9999:x.ping)-(y.ping==null?9999:y.ping)));
  return a;
 }
-function filtered(){let l;if(resF==='ok')l=results.filter(r=>r.ok>0);else if(resF==='top')l=results.filter(r=>r.score>=S.minScore);else l=[...results];return sortedList(l)}
+function filtered(){let l;if(resF==='ok')l=results.filter(r=>r.ok>0);else if(resF==='top')l=results.filter(r=>passed(r));else l=[...results];return sortedList(l)}
 function renderResults(){
  const list=filtered();
- $('resBody').innerHTML=list.slice(0,800).map(r=>{
+ $('resBody').innerHTML=list.slice(0,800).map((r,i)=>{
   const col=r.score>=90?'var(--green)':r.score>=70?'var(--yellow)':'var(--red)';
-  return'<tr><td class="ip">'+r.ip+(r.verified?SHIELD:'')+'</td><td>'+(r.ping==null?'—':r.ping+'ms<div class="jit">±'+r.jit+'</div>')+'</td><td style="color:'+col+';font-weight:700">'+r.score.toFixed(1)+'</td><td><span class="dotc" style="background:'+col+'"></span></td></tr>'}).join('')||'<tr><td colspan="4" class="muted">نتیجه ای نیست</td></tr>';
+  const lcol=r.loss==null?'':(r.loss<=10?'loss0':r.loss<=40?'loss1':'loss2');
+  return'<tr>'+
+   '<td class="muted">'+(i+1)+'</td>'+
+   '<td class="ip">'+r.ip+(r.verified?SHIELD:'')+'<button class="cpbtn" title="کپی IP" onclick="copyIP(\''+r.ip+'\')">'+COPYIC+'</button></td>'+
+   '<td style="color:'+col+';font-weight:700">'+r.score.toFixed(1)+'</td>'+
+   '<td>'+(r.ping==null?'—':r.ping+'ms<div class="jit">±'+r.jit+'</div>')+'</td>'+
+   '<td class="'+lcol+'">'+(r.loss==null?'—':r.loss+'%')+'</td>'+
+   '<td>'+(r.speed==null?'—':r.speed+' <span class="jit">MB/s</span>')+'</td>'+
+   '<td>'+(passed(r)?'<span class="pass">پاس</span>':'<span class="failb">رد</span>')+'</td>'+
+   '</tr>'}).join('')||'<tr><td colspan="7" class="muted">نتیجه ای نیست</td></tr>';
  $('resCount').textContent='تعداد: '+fmt(list.length);
 }
 function copyRes(){const t=filtered().map(r=>r.ip).join('\n');if(!t)return toast('لیست خالی است');
- (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('کپی شد')).catch(()=>{const ta=document.createElement('textarea');ta.value=t;document.body.appendChild(ta);ta.select();document.execCommand('copy');ta.remove();toast('کپی شد')})}
-function saveRes(){const t='ip,ping,jitter,score,verified\n'+filtered().map(r=>r.ip+','+(r.ping||'')+','+r.jit+','+r.score+','+(r.verified?'yes':'no')).join('\n');
+ (navigator.clipboard?navigator.clipboard.writeText(t):Promise.reject()).then(()=>toast('کپی شد')).catch(()=>{fallbackCopy(t);toast('کپی شد')})}
+function saveRes(){const t='ip,ping,jitter,loss,speed,score,passed\n'+filtered().map(r=>r.ip+','+(r.ping||'')+','+r.jit+','+(r.loss==null?'':r.loss+'%')+','+(r.speed||'')+','+r.score+','+(passed(r)?'yes':'no')).join('\n');
  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([t],{type:'text/csv'}));a.download='cf-clean-ips.csv';a.click();toast('ذخیره شد')}
-function shareRes(){const t='IP های تمیز کلادفلر:\n'+filtered().slice(0,20).map(r=>r.ip+' | '+r.ping+'ms | '+r.score+(r.verified?' ✔':'')).join('\n');
+function shareRes(){const t='IP های تمیز کلادفلر:\n'+filtered().slice(0,20).map(r=>r.ip+' | '+r.ping+'ms | لاست '+r.loss+'% | '+r.score+(passed(r)?' ✔ پاس':'')).join('\n');
  if(navigator.share)navigator.share({text:t}).catch(()=>{});else copyRes()}
 function faDate(){return new Intl.DateTimeFormat('fa-IR-u-nu-latn',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'}).format(new Date())}
 function renderHistoryAdd(){
