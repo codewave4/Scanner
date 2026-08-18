@@ -227,14 +227,12 @@ nav button.on{color:var(--blue)}
 
 </div>
 
-<!-- مودال کانفیگ PattNG -->
 <div class="modal" id="cfgModal" onclick="if(event.target===this)this.classList.remove('show')">
  <div class="mbox">
   <div class="mhead"><div class="mlogo" style="background:linear-gradient(90deg,#22c55e,#3b82f6)"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div><div><h2>کانفیگ PattNG</h2><div class="ver" id="cfgIpLbl"></div></div></div>
   <p style="line-height:1.8;margin-bottom:4px"><b>۱) مقادیر آماده</b> — کپی کن و در فیلدهای PattNG پیست کن:</p>
   <div id="cfgFields"></div>
-  <button class="btn" onclick="copyCfgAll()">کپی همه مقادیر</button>
-  <p style="line-height:1.8;margin-top:12px"><b>۲) لینک هوشمند</b> — IP به‌صورت خودکار داخل لینک کانفیگ خودت:</p>
+  <p style="line-height:1.8;margin-top:12px"><b>۲) لینک هوشمند</b> — IP + finalMask + cipherSuites + fingerprint همه خودکار داخل لینک:</p>
   <div id="cfgLinkBox" style="display:none">
    <div class="cfgrow"><code id="cfgLink"></code><button class="cpbtn" onclick="copyCfgLink()"><svg class="i" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
    <button class="btn tg" onclick="copyCfgLink()">کپی لینک کانفیگ آماده</button>
@@ -246,11 +244,11 @@ nav button.on{color:var(--blue)}
 
 <div class="modal" id="aboutModal" onclick="if(event.target===this)this.classList.remove('show')">
  <div class="mbox">
-  <div class="mhead"><div class="mlogo"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></div><div><h2>اسکنر IP کلادفلر</h2><div class="ver">نسخه 4.5 — نسخه وب (GitHub Pages)</div></div></div>
+  <div class="mhead"><div class="mlogo"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></div><div><h2>اسکنر IP کلادفلر</h2><div class="ver">نسخه 4.6 — نسخه وب (GitHub Pages)</div></div></div>
   <p>اسکنر آنلاین و رایگان پیدا کردن IP تمیز و پایدار کلادفلر — مستقیم داخل مرورگر، بدون نصب.</p>
   <p>✦ اسکن دومرحله‌ای + امتیازدهی هوشمند<br>
   ✦ پکت لاست، سرعت تخمینی و بج «پاس»<br>
-  ✦ <b>تولیدکننده کانفیگ PattNG</b> (کپی مقادیر + لینک هوشمند)<br>
+  ✦ <b>تولیدکننده کانفیگ PattNG</b> — لینک هوشمند با finalMask و cipherSuites داخلی<br>
   ✦ تشخیص نیمه‌مسدودها + کالیبراسیون پینگ پایه<br>
   ✦ حافظه IP‌های خوب + رنج سفارشی (CIDR)<br>
   ✦ کپی، CSV، اشتراک‌گذاری</p>
@@ -313,13 +311,18 @@ function buildLink(base,ip){
  const b=base.trim();
  try{
   if(b.startsWith('vless://')){
-   const u=new URL(b);u.hostname=ip;u.searchParams.set('fp','unsafe');
-   if(!u.searchParams.get('security'))u.searchParams.set('security','tls');
+   const u=new URL(b);
+   u.hostname=ip;
+   const sp=u.searchParams;
+   sp.set('fp','unsafe');
+   sp.set('finalMask',FINAL_MASK);
+   sp.set('cipherSuites',CIPHERS);
+   if(!sp.get('security'))sp.set('security','tls');
    return u.toString();
   }
   if(b.startsWith('vmess://')){
    const json=JSON.parse(decodeURIComponent(escape(atob(b.slice(8)))));
-   json.add=ip;json.fp='unsafe';
+   json.add=ip;json.fp='unsafe';json.finalMask=FINAL_MASK;json.cipherSuites=CIPHERS;
    return 'vmess://'+btoa(unescape(encodeURIComponent(JSON.stringify(json))));
   }
  }catch(e){}
@@ -339,7 +342,6 @@ function openCfg(ip){
  $('cfgModal').classList.add('show');
 }
 function copyCfgVal(i){copyText(cfgVals[i][1]);toast('کپی شد: '+cfgVals[i][0])}
-function copyCfgAll(){copyText('address: '+cfgIP+'\nport: '+(S.port||443)+'\nfinalMask: '+FINAL_MASK+'\nfingerprint: unsafe\ncipherSuites: '+CIPHERS);toast('همه مقادیر کپی شد')}
 function copyCfgLink(){const t=$('cfgLink').dataset.full;if(t){copyText(t);toast('لینک کانفیگ آماده کپی شد')}else toast('اول لینک پایه رو تنظیم کن')}
 function setBaseLink(){
  const v=prompt('لینک کانفیگ خودت (vless:// یا vmess://) رو پیست کن:');
