@@ -232,7 +232,7 @@ nav button.on{color:var(--blue)}
   <div class="mhead"><div class="mlogo" style="background:linear-gradient(90deg,#22c55e,#3b82f6)"><svg viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div><div><h2>کانفیگ PattNG</h2><div class="ver" id="cfgIpLbl"></div></div></div>
   <p style="line-height:1.8;margin-bottom:4px"><b>۱) مقادیر آماده</b> — کپی کن و در فیلدهای PattNG پیست کن:</p>
   <div id="cfgFields"></div>
-  <p style="line-height:1.8;margin-top:12px"><b>۲) لینک هوشمند</b> — IP + finalMask + cipherSuites + fingerprint همه خودکار داخل لینک:</p>
+  <p style="line-height:1.8;margin-top:12px"><b>۲) لینک هوشمند</b> — IP + fm + cs + fp همه خودکار داخل لینک:</p>
   <div id="cfgLinkBox" style="display:none">
    <div class="cfgrow"><code id="cfgLink"></code><button class="cpbtn" onclick="copyCfgLink()"><svg class="i" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg></button></div>
    <button class="btn tg" onclick="copyCfgLink()">کپی لینک کانفیگ آماده</button>
@@ -244,11 +244,11 @@ nav button.on{color:var(--blue)}
 
 <div class="modal" id="aboutModal" onclick="if(event.target===this)this.classList.remove('show')">
  <div class="mbox">
-  <div class="mhead"><div class="mlogo"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></div><div><h2>اسکنر IP کلادفلر</h2><div class="ver">نسخه 4.6 — نسخه وب (GitHub Pages)</div></div></div>
+  <div class="mhead"><div class="mlogo"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></div><div><h2>اسکنر IP کلادفلر</h2><div class="ver">نسخه 4.7 — نسخه وب (GitHub Pages)</div></div></div>
   <p>اسکنر آنلاین و رایگان پیدا کردن IP تمیز و پایدار کلادفلر — مستقیم داخل مرورگر، بدون نصب.</p>
   <p>✦ اسکن دومرحله‌ای + امتیازدهی هوشمند<br>
   ✦ پکت لاست، سرعت تخمینی و بج «پاس»<br>
-  ✦ <b>تولیدکننده کانفیگ PattNG</b> — لینک هوشمند با finalMask و cipherSuites داخلی<br>
+  ✦ <b>تولیدکننده کانفیگ PattNG</b> — لینک هوشمند با پارامترهای fm و cs<br>
   ✦ تشخیص نیمه‌مسدودها + کالیبراسیون پینگ پایه<br>
   ✦ حافظه IP‌های خوب + رنج سفارشی (CIDR)<br>
   ✦ کپی، CSV، اشتراک‌گذاری</p>
@@ -281,7 +281,7 @@ nav button.on{color:var(--blue)}
 <script>
 const CF_RANGES=['104.16.0.0/13','104.24.0.0/14','108.162.192.0/18','131.0.72.0/22','141.101.64.0/18','162.158.0.0/15','172.64.0.0/13','173.245.48.0/20','188.114.96.0/20','190.93.240.0/20','197.234.240.0/22','198.41.128.0/17'];
 const GOOD_KEY='cfscan_good',LINK_KEY='cfscan_link';
-const FINAL_MASK='{"tcp": [{"type": "fragment", "settings": {"packets": "tlshello", "lengths": ["5", "94", "1"], "delays": ["0"], "maxSplit": "0"}},{"type": "fragment", "settings": {"packets": "1-1", "lengths": ["109", "1"], "delays": ["1"], "maxSplit": "355"}}]}';
+const FINAL_MASK='{"tcp":[{"type":"fragment","settings":{"packets":"tlshello","lengths":["5","94","1"],"delays":["0"],"maxSplit":"0"}},{"type":"fragment","settings":{"packets":"1-1","lengths":["109","1"],"delays":["1"],"maxSplit":"355"}}]}';
 const CIPHERS='TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA:TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA:TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256';
 const SHIELD='<svg class="sh" viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>';
 const BIC='<span class="bic"><svg class="i" viewBox="0 0 24 24"><path d="M4 18v-1M8 18v-4M12 18v-7M16 18v-10M20 18v-13"/></svg></span>';
@@ -306,23 +306,23 @@ function fallbackCopy(t){const ta=document.createElement('textarea');ta.value=t;
 function copyText(t){if(navigator.clipboard)navigator.clipboard.writeText(t).catch(()=>fallbackCopy(t));else fallbackCopy(t)}
 function copyIP(ip){copyText(ip);toast('کپی شد: '+ip)}
 
-/* ---------- تولیدکننده کانفیگ ---------- */
+/* ---------- تولیدکننده کانفیگ (پارامترهای رسمی PattNG: fp / cs / fm) ---------- */
 function buildLink(base,ip){
  const b=base.trim();
  try{
-  if(b.startsWith('vless://')){
+  if(b.startsWith('vless://')||b.startsWith('trojan://')){
    const u=new URL(b);
    u.hostname=ip;
    const sp=u.searchParams;
    sp.set('fp','unsafe');
-   sp.set('finalMask',FINAL_MASK);
-   sp.set('cipherSuites',CIPHERS);
+   sp.set('cs',CIPHERS);
+   sp.set('fm',FINAL_MASK);
    if(!sp.get('security'))sp.set('security','tls');
    return u.toString();
   }
   if(b.startsWith('vmess://')){
    const json=JSON.parse(decodeURIComponent(escape(atob(b.slice(8)))));
-   json.add=ip;json.fp='unsafe';json.finalMask=FINAL_MASK;json.cipherSuites=CIPHERS;
+   json.add=ip;json.fp='unsafe';json.cs=CIPHERS;json.fm=FINAL_MASK;
    return 'vmess://'+btoa(unescape(encodeURIComponent(JSON.stringify(json))));
   }
  }catch(e){}
@@ -344,7 +344,7 @@ function openCfg(ip){
 function copyCfgVal(i){copyText(cfgVals[i][1]);toast('کپی شد: '+cfgVals[i][0])}
 function copyCfgLink(){const t=$('cfgLink').dataset.full;if(t){copyText(t);toast('لینک کانفیگ آماده کپی شد')}else toast('اول لینک پایه رو تنظیم کن')}
 function setBaseLink(){
- const v=prompt('لینک کانفیگ خودت (vless:// یا vmess://) رو پیست کن:');
+ const v=prompt('لینک کانفیگ خودت (vless:// یا vmess:// یا trojan://) رو پیست کن:');
  if(v&&v.trim()){
   localStorage.setItem(LINK_KEY,v.trim());updBaseLink();toast('لینک پایه ذخیره شد ✔');
   if(cfgIP&&$('cfgModal').classList.contains('show'))openCfg(cfgIP);
