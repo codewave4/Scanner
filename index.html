@@ -16,6 +16,7 @@ body{font-family:'Vazirmatn',Tahoma,sans-serif;background:var(--bg);color:var(--
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
 .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:15px;margin-bottom:11px}
 .muted{color:var(--muted);font-size:11.5px}
+.fl{font-size:12px;font-weight:700;color:var(--blue);margin:12px 0 6px}
 svg.i{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .head{display:flex;align-items:center;gap:12px;margin-bottom:13px}
 .logo{width:50px;height:50px;border-radius:16px;background:var(--grad);display:flex;align-items:center;justify-content:center}
@@ -45,12 +46,13 @@ canvas{width:100%;height:120px;display:block}
 .btn.red{background:var(--red)}
 .btn.tg{background:linear-gradient(90deg,#229ed9,#22c55e)}
 .btn.ghost{background:var(--card2);color:var(--text);border:1px solid var(--line)}
+.btn:disabled{opacity:.5}
 .row{display:flex;align-items:center;justify-content:space-between;padding:13px 2px;border-bottom:1px solid var(--line);font-size:13px}
 .row:last-child{border:none}
 .row .val{color:var(--muted);font-size:12px}
 .row .rt{display:flex;align-items:center;gap:9px}
 .row .rt svg{width:17px;height:17px;color:var(--muted)}
-select,input[type=number],textarea{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:11px;padding:11px;font-family:inherit;font-size:13px}
+select,input,textarea{width:100%;background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:11px;padding:11px;font-family:inherit;font-size:13px}
 textarea{direction:ltr;text-align:left;min-height:80px;margin-top:10px}
 .seg{display:flex;gap:8px}
 .seg button{flex:1;background:var(--card2);border:1px solid var(--line);color:var(--text);border-radius:11px;padding:10px;font-family:inherit;font-size:12.5px;cursor:pointer}
@@ -99,8 +101,8 @@ td.ip{font-weight:700;white-space:nowrap}
 .hitem .sc{font-size:12px;color:var(--yellow);font-weight:700}
 nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--line);z-index:10}
 nav .in{max-width:480px;margin:0 auto;display:flex}
-nav button{flex:1;background:none;border:none;color:var(--muted);padding:10px 0 12px;font-family:inherit;font-size:10px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:5px}
-nav button svg{width:20px;height:20px}
+nav button{flex:1;background:none;border:none;color:var(--muted);padding:9px 0 11px;font-family:inherit;font-size:9px;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:4px}
+nav button svg{width:18px;height:18px}
 nav button.on{color:var(--blue)}
 .sw{position:relative;width:42px;height:24px;background:var(--card2);border:1px solid var(--line);border-radius:20px;cursor:pointer;transition:.2s;flex-shrink:0}
 .sw i{position:absolute;top:2px;right:2px;width:18px;height:18px;border-radius:50%;background:var(--muted);transition:.2s}
@@ -164,6 +166,8 @@ nav button.on{color:var(--blue)}
   <div class="card">
    <div class="row"><span class="rt">تأیید دومرحله‌ای (دقت بالا)</span><div class="sw on" id="swVerify" onclick="tglSw(this,'verify')"><i></i></div></div>
    <div class="row"><span class="rt">تست چند پورت برای برترها</span><div class="sw on" id="swPort" onclick="tglSw(this,'multiPort')"><i></i></div></div>
+   <div class="row"><span class="rt">اسکن خودکار</span><div class="sw" id="swAuto" onclick="tglSw(this,'auto')"><i></i></div></div>
+   <div class="row"><span class="rt">فاصله اسکن خودکار</span><select id="autoMin" style="width:110px" onchange="S.autoMin=+this.value;saveSet()"><option value="10">۱۰ دقیقه</option><option value="30">۳۰ دقیقه</option><option value="60">۶۰ دقیقه</option></select></div>
   </div>
   <button class="btn" onclick="startScan()">ذخیره و شروع اسکن</button>
  </div>
@@ -203,6 +207,47 @@ nav button.on{color:var(--blue)}
  <p class="muted" style="text-align:center;margin-top:10px" id="resCount">تعداد: 0</p>
 </section>
 
+<section id="page-stats" class="page">
+ <div class="ptitle">آمار</div>
+ <div class="stats">
+  <div class="stat"><div class="t">کل اسکن‌ها <span class="ic" style="background:rgba(59,130,246,.12);color:var(--blue)"><svg class="i" viewBox="0 0 24 24"><path d="M5 20v-8M12 20V5M19 20v-11"/></svg></span></div><div class="v" id="stTotalScans">0</div></div>
+  <div class="stat"><div class="t">کل IP تست‌شده <span class="ic" style="background:rgba(34,197,94,.12);color:var(--green)"><svg class="i" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span></div><div class="v" id="stTotalIP">0</div></div>
+  <div class="stat"><div class="t">بهترین امتیاز <span class="ic" style="background:rgba(234,179,8,.12);color:var(--yellow)"><svg class="i" viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><path d="M12 2l2.9 6.6 7.1.6-5.4 4.7 1.6 7-6.2-3.7-6.2 3.7 1.6-7L2.9 9.2l7.1-.6z"/></svg></span></div><div class="v" id="stBestEver">—</div></div>
+  <div class="stat"><div class="t">IP خوب ذخیره‌شده <span class="ic" style="background:rgba(34,197,94,.12);color:var(--green)"><svg class="i" viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></span></div><div class="v" id="stGood">0</div></div>
+ </div>
+ <div class="card"><h3>روند بهترین امتیاز اسکن‌ها</h3><canvas id="statChart" width="600" height="220"></canvas></div>
+</section>
+
+<section id="page-tools" class="page">
+ <div class="ptitle">بهینه‌ساز کانفیگ</div>
+ <div class="card">
+  <h3>کانفیگ / ساب ورودی</h3>
+  <textarea id="optIn" style="min-height:110px" placeholder="vless://...&#10;trojan://...&#10;https://example.com/sub"></textarea>
+  <button class="btn" id="optBtn" onclick="runOptimize()">اعمال بهینه‌سازی</button>
+  <div id="optRes" style="display:none">
+   <p class="muted" style="margin-top:10px" id="optCount"></p>
+   <textarea id="optOut" style="min-height:130px" readonly></textarea>
+   <button class="btn tg" onclick="copyOpt()">کپی خروجی</button>
+  </div>
+ </div>
+ <div class="card">
+  <h3>تنظیمات پیشرفته <span class="rv">اعمال روی همه</span></h3>
+  <div class="fl">آدرس سرور (اختیاری)</div>
+  <div style="display:flex;gap:8px">
+   <input id="optAdr" placeholder="خالی = آدرس دست نمی‌خورد">
+   <button class="cpbtn" style="padding:9px 14px" onclick="$('optAdr').value='';saveOpt();toast('پاک شد')">پاک</button>
+  </div>
+  <div class="fl">Fingerprint</div>
+  <select id="optFp"><option value="unsafe">unsafe</option><option value="chrome">chrome</option><option value="firefox">firefox</option><option value="safari">safari</option><option value="edge">edge</option><option value="random">random</option></select>
+  <div class="fl">Cipher Suites (cs)</div>
+  <textarea id="optCs" style="min-height:70px"></textarea>
+  <div class="fl">FinalMask (fm)</div>
+  <textarea id="optFm" style="min-height:80px"></textarea>
+  <p class="muted" id="optFmH" style="margin-top:6px"></p>
+  <button class="btn ghost" onclick="resetOpt()">بازنشانی پیش‌فرض‌ها</button>
+ </div>
+</section>
+
 <section id="page-history" class="page">
  <div class="ptitle">تاریخچه اسکن ها</div>
  <div class="card" id="histBox"><div class="muted">تاریخچه ای وجود ندارد</div></div>
@@ -214,7 +259,7 @@ nav button.on{color:var(--blue)}
   <div class="row"><span class="rt"><svg class="i" viewBox="0 0 24 24"><path d="M21 13A9 9 0 1 1 11 3a7 7 0 0 0 10 10z"/></svg>تم برنامه</span><div class="sw" id="swTheme" onclick="toggleTheme()"><i></i></div></div>
   <div class="row"><span class="rt"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18z"/></svg>زبان برنامه</span><span class="val">فارسی</span></div>
   <div class="row"><span class="rt"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>واحد پینگ</span><span class="val">ms</span></div>
-  <div class="row"><span class="rt"><svg class="i" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21h4"/></svg>اعلان ها</span><div class="sw on" id="swNotif" onclick="tglSw(this,'notif')"><i></i></div></div>
+  <div class="row"><span class="rt"><svg class="i" viewBox="0 0 24 24"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21h4"/></svg>اعلان و ویبره</span><div class="sw on" id="swNotif" onclick="tglSw(this,'notif')"><i></i></div></div>
   <div class="row"><span class="rt"><svg class="i" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>ذخیره نتایج</span><div class="sw on" id="swSave" onclick="tglSw(this,'save')"><i></i></div></div>
   <div class="row"><span class="rt"><svg class="i" viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>حافظه IP های خوب</span><span class="val" id="goodCount" style="cursor:pointer" onclick="clearGood()">0 IP</span></div>
   <div class="row"><span class="rt"><svg class="i" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>لینک کانفیگ من</span><span class="val" id="baseLinkVal" style="cursor:pointer;color:var(--blue)" onclick="setBaseLink()">تنظیم نشده</span></div>
@@ -242,16 +287,26 @@ nav button.on{color:var(--blue)}
  </div>
 </div>
 
+<div class="modal" id="baseModal" onclick="if(event.target===this)this.classList.remove('show')">
+ <div class="mbox">
+  <div class="mhead"><div class="mlogo"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg></div><div><h2>لینک کانفیگ من</h2><div class="ver">برای ساخت لینک هوشمند استفاده می‌شه</div></div></div>
+  <p>لینک کانفیگ خودت رو پیست کن (آدرسش با IP تمیز عوض می‌شه):</p>
+  <textarea id="baseIn" style="min-height:90px" placeholder="vless://..."></textarea>
+  <button class="btn tg" onclick="saveBaseLink()">ذخیره</button>
+  <button class="btn red" onclick="document.getElementById('baseModal').classList.remove('show')">بستن</button>
+ </div>
+</div>
+
 <div class="modal" id="aboutModal" onclick="if(event.target===this)this.classList.remove('show')">
  <div class="mbox">
-  <div class="mhead"><div class="mlogo"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></div><div><h2>اسکنر IP کلادفلر</h2><div class="ver">نسخه 4.7 — نسخه وب (GitHub Pages)</div></div></div>
+  <div class="mhead"><div class="mlogo"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></div><div><h2>اسکنر IP کلادفلر</h2><div class="ver">نسخه 4.9 — نسخه وب (GitHub Pages)</div></div></div>
   <p>اسکنر آنلاین و رایگان پیدا کردن IP تمیز و پایدار کلادفلر — مستقیم داخل مرورگر، بدون نصب.</p>
   <p>✦ اسکن دومرحله‌ای + امتیازدهی هوشمند<br>
-  ✦ پکت لاست، سرعت تخمینی و بج «پاس»<br>
-  ✦ <b>تولیدکننده کانفیگ PattNG</b> — لینک هوشمند با پارامترهای fm و cs<br>
-  ✦ تشخیص نیمه‌مسدودها + کالیبراسیون پینگ پایه<br>
-  ✦ حافظه IP‌های خوب + رنج سفارشی (CIDR)<br>
-  ✦ کپی، CSV، اشتراک‌گذاری</p>
+  ✦ حافظه subnet هوشمند (یادگیری بازه‌های خوب)<br>
+  ✦ کش منفی (تست نکردن IP های مردودی اخیر)<br>
+  ✦ ماندگاری نتایج بعد از رفرش صفحه<br>
+  ✦ بهینه‌ساز ساب/کانفیگ با تنظیمات پیشرفته<br>
+  ✦ اسکن خودکار + ویبره + صفحه آمار</p>
   <p>ساخته‌شده با ❤️ برای دور زدن محدودیت‌ها</p>
   <button class="btn tg" onclick="openTelegram()">عضویت در کانال تلگرام</button>
   <button class="btn red" onclick="document.getElementById('aboutModal').classList.remove('show')">بستن</button>
@@ -273,6 +328,8 @@ nav button.on{color:var(--blue)}
  <button data-p="home" class="on" onclick="go('home')"><svg class="i" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V21h-5v-6h-8v6H3z"/></svg>خانه</button>
  <button data-p="scan" onclick="go('scan')"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>اسکن</button>
  <button data-p="results" onclick="go('results')"><svg class="i" viewBox="0 0 24 24"><path d="M5 20v-8M12 20V5M19 20v-11"/></svg>نتایج</button>
+ <button data-p="stats" onclick="go('stats')"><svg class="i" viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>آمار</button>
+ <button data-p="tools" onclick="go('tools')"><svg class="i" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>بهینه‌ساز</button>
  <button data-p="history" onclick="go('history')"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>تاریخچه</button>
  <button data-p="settings" onclick="go('settings')"><svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/></svg>تنظیمات</button>
 </div></nav>
@@ -280,7 +337,7 @@ nav button.on{color:var(--blue)}
 
 <script>
 const CF_RANGES=['104.16.0.0/13','104.24.0.0/14','108.162.192.0/18','131.0.72.0/22','141.101.64.0/18','162.158.0.0/15','172.64.0.0/13','173.245.48.0/20','188.114.96.0/20','190.93.240.0/20','197.234.240.0/22','198.41.128.0/17'];
-const GOOD_KEY='cfscan_good',LINK_KEY='cfscan_link';
+const GOOD_KEY='cfscan_good',LINK_KEY='cfscan_link',OPT_KEY='cfscan_opt',HEAT_KEY='cfscan_heat',NEG_KEY='cfscan_neg',RES_KEY='cfscan_res';
 const FINAL_MASK='{"tcp":[{"type":"fragment","settings":{"packets":"tlshello","lengths":["5","94","1"],"delays":["0"],"maxSplit":"0"}},{"type":"fragment","settings":{"packets":"1-1","lengths":["109","1"],"delays":["1"],"maxSplit":"355"}}]}';
 const CIPHERS='TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256:TLS_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256:TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA:TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA:TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256:TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256';
 const SHIELD='<svg class="sh" viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg>';
@@ -290,12 +347,13 @@ const WRENCH='<svg class="i" viewBox="0 0 24 24"><path d="M14.7 6.3a1 1 0 0 0 0 
 const $=id=>document.getElementById(id);
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-let S=Object.assign({source:'cf',custom:'',port:443,tests:3,total:300,threads:200,timeout:3,minScore:80,theme:'dark',notif:true,save:true,verify:true,multiPort:true},JSON.parse(localStorage.getItem('cfscan_set')||'{}'));
-let results=[],running=false,stopFlag=false,chartData=[],dist=[0,0,0,0,0],done1=0,done2=0,assigned=0,totalQ=0,baseline=null,effTo=3000,cfgIP=null,cfgVals=[];
+let S=Object.assign({source:'cf',custom:'',port:443,tests:3,total:300,threads:200,timeout:3,minScore:80,theme:'dark',notif:true,save:true,verify:true,multiPort:true,auto:false,autoMin:30},JSON.parse(localStorage.getItem('cfscan_set')||'{}'));
+let OPT=Object.assign({adr:'',fp:'unsafe',cs:CIPHERS,fm:FINAL_MASK},JSON.parse(localStorage.getItem(OPT_KEY)||'{}'));
+let results=[],running=false,stopFlag=false,chartData=[],dist=[0,0,0,0,0],done1=0,done2=0,assigned=0,totalQ=0,baseline=null,effTo=3000,cfgIP=null,cfgVals=[],autoTimer=null,HOT=[],NEG={};
 
 function saveSet(){localStorage.setItem('cfscan_set',JSON.stringify(S))}
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2400)}
-function go(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$('page-'+p).classList.add('active');document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p))}
+function go(p){document.querySelectorAll('.page').forEach(x=>x.classList.remove('active'));$('page-'+p).classList.add('active');document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.p===p));if(p==='stats')renderStats()}
 function fmt(n){return n.toLocaleString('en-US')}
 function showAbout(){$('aboutModal').classList.add('show')}
 function showTrain(){$('trainModal').classList.add('show')}
@@ -306,17 +364,33 @@ function fallbackCopy(t){const ta=document.createElement('textarea');ta.value=t;
 function copyText(t){if(navigator.clipboard)navigator.clipboard.writeText(t).catch(()=>fallbackCopy(t));else fallbackCopy(t)}
 function copyIP(ip){copyText(ip);toast('کپی شد: '+ip)}
 
-/* ---------- تولیدکننده کانفیگ (پارامترهای رسمی PattNG: fp / cs / fm) ---------- */
+/* ---------- حافظه هوشمند: heatmap + کش منفی ---------- */
+function loadCaches(){
+ try{NEG=JSON.parse(localStorage.getItem(NEG_KEY)||'{}')}catch(e){NEG={}}
+ const cut=Date.now()-6*3600e3;let ch=false;
+ for(const k in NEG)if(NEG[k]<cut){delete NEG[k];ch=true}
+ if(ch)localStorage.setItem(NEG_KEY,JSON.stringify(NEG));
+ let h={};try{h=JSON.parse(localStorage.getItem(HEAT_KEY)||'{}')}catch(e){}
+ HOT=Object.keys(h).map(k=>[k,h[k]]).sort((a,b)=>b[1]-a[1]).slice(0,40).map(a=>a[0]);
+}
+function hotIP(){const p=HOT[Math.floor(Math.random()*HOT.length)];return p+'.'+Math.floor(Math.random()*256)}
+function prefOf(ip){return ip.split('.').slice(0,3).join('.')}
+
+/* ---------- تنظیمات پیشرفته بهینه‌ساز ---------- */
+function optFmOk(){try{JSON.parse(OPT.fm);return true}catch(e){return false}}
+function valOptFm(){const el=$('optFmH');if(optFmOk()){el.textContent='✓ JSON معتبر';el.style.color='var(--green)'}else{el.textContent='✗ JSON نامعتبر — پیش‌فرض استفاده می‌شه';el.style.color='var(--red)'}}
+function loadOptUI(){$('optAdr').value=OPT.adr||'';$('optFp').value=OPT.fp||'unsafe';$('optCs').value=OPT.cs||CIPHERS;$('optFm').value=OPT.fm||FINAL_MASK;valOptFm()}
+function saveOpt(){OPT={adr:$('optAdr').value.trim(),fp:$('optFp').value,cs:$('optCs').value.trim()||CIPHERS,fm:$('optFm').value.trim()||FINAL_MASK};localStorage.setItem(OPT_KEY,JSON.stringify(OPT));valOptFm()}
+function resetOpt(){OPT={adr:'',fp:'unsafe',cs:CIPHERS,fm:FINAL_MASK};localStorage.setItem(OPT_KEY,JSON.stringify(OPT));loadOptUI();toast('بازنشانی شد')}
+
+/* ---------- تولیدکننده کانفیگ (لینک هوشمند با IP) ---------- */
 function buildLink(base,ip){
  const b=base.trim();
  try{
   if(b.startsWith('vless://')||b.startsWith('trojan://')){
-   const u=new URL(b);
-   u.hostname=ip;
+   const u=new URL(b);u.hostname=ip;
    const sp=u.searchParams;
-   sp.set('fp','unsafe');
-   sp.set('cs',CIPHERS);
-   sp.set('fm',FINAL_MASK);
+   sp.set('fp','unsafe');sp.set('cs',CIPHERS);sp.set('fm',FINAL_MASK);
    if(!sp.get('security'))sp.set('security','tls');
    return u.toString();
   }
@@ -343,14 +417,100 @@ function openCfg(ip){
 }
 function copyCfgVal(i){copyText(cfgVals[i][1]);toast('کپی شد: '+cfgVals[i][0])}
 function copyCfgLink(){const t=$('cfgLink').dataset.full;if(t){copyText(t);toast('لینک کانفیگ آماده کپی شد')}else toast('اول لینک پایه رو تنظیم کن')}
-function setBaseLink(){
- const v=prompt('لینک کانفیگ خودت (vless:// یا vmess:// یا trojan://) رو پیست کن:');
- if(v&&v.trim()){
-  localStorage.setItem(LINK_KEY,v.trim());updBaseLink();toast('لینک پایه ذخیره شد ✔');
-  if(cfgIP&&$('cfgModal').classList.contains('show'))openCfg(cfgIP);
- }
+function setBaseLink(){$('baseIn').value=localStorage.getItem(LINK_KEY)||'';$('baseModal').classList.add('show')}
+function saveBaseLink(){
+ const v=$('baseIn').value.trim();
+ if(!v)return toast('خالی است');
+ if(!/^(vless|vmess|trojan):\/\//i.test(v))return toast('لینک معتبر نیست');
+ localStorage.setItem(LINK_KEY,v);updBaseLink();
+ $('baseModal').classList.remove('show');toast('لینک پایه ذخیره شد ✔');
+ if(cfgIP)openCfg(cfgIP);
 }
 function updBaseLink(){$('baseLinkVal').textContent=localStorage.getItem(LINK_KEY)?'ذخیره شده ✔':'تنظیم نشده'}
+
+/* ---------- بهینه‌ساز ساب/کانفیگ (با تنظیمات پیشرفته) ---------- */
+const ANY_PROTO=/^(vless|vmess|trojan|ss|ssr|hysteria2?|tuic):\/\//i;
+function applyOptLine(l){
+ const t=l.trim();
+ const fp=OPT.fp||'unsafe',cs=OPT.cs||CIPHERS,fm=optFmOk()?OPT.fm:FINAL_MASK,adr=OPT.adr||'';
+ try{
+  if(/^vless:\/\//i.test(t)||/^trojan:\/\//i.test(t)){
+   const u=new URL(t);if(adr)u.hostname=adr;
+   const sp=u.searchParams;
+   sp.set('fp',fp);sp.set('cs',cs);sp.set('fm',fm);
+   if(!sp.get('security'))sp.set('security','tls');
+   return u.toString();
+  }
+  if(/^vmess:\/\//i.test(t)){
+   const json=JSON.parse(decodeURIComponent(escape(atob(t.slice(8)))));
+   if(adr)json.add=adr;json.fp=fp;json.cs=cs;json.fm=fm;
+   return 'vmess://'+btoa(unescape(encodeURIComponent(JSON.stringify(json))));
+  }
+ }catch(e){}
+ return t;
+}
+function b64dec(s){try{let t=s.replace(/\s/g,'').replace(/-/g,'+').replace(/_/g,'/');while(t.length%4)t+='=';const b=atob(t);return decodeURIComponent(b.split('').map(c=>'%'+('00'+c.charCodeAt(0).toString(16)).slice(-2)).join(''))}catch(e){return ''}}
+function extractConfigs(t){
+ let out=[];t.split(/\r?\n/).forEach(l=>{l=l.trim();if(ANY_PROTO.test(l))out.push(l)});
+ if(!out.length){const d=b64dec(t);if(d)d.split(/\r?\n/).forEach(l=>{l=l.trim();if(ANY_PROTO.test(l))out.push(l)})}
+ return out;
+}
+async function fetchSubText(u){
+ const proxies=['','https://corsproxy.io/?','https://api.allorigins.win/raw?url='];
+ for(const p of proxies){
+  try{
+   const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),9000);
+   const r=await fetch(p+(p?encodeURIComponent(u):u),{signal:ctrl.signal});
+   clearTimeout(to);
+   if(r.ok)return await r.text();
+  }catch(e){}
+ }
+ throw new Error('fetch failed');
+}
+async function runOptimize(){
+ const raw=$('optIn').value.trim();
+ if(!raw)return toast('ورودی خالی است');
+ const lines=raw.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+ const subs=lines.filter(l=>/^https?:\/\//i.test(l));
+ let configs=lines.filter(l=>ANY_PROTO.test(l));
+ $('optBtn').disabled=true;$('optBtn').textContent='در حال پردازش...';
+ for(const s of subs){
+  try{const txt=await fetchSubText(s);configs=configs.concat(extractConfigs(txt))}
+  catch(e){toast('ساب دریافت نشد: '+s.slice(0,30))}
+ }
+ configs=[...new Set(configs)];
+ const out=configs.map(applyOptLine);
+ $('optOut').value=out.join('\n');
+ $('optCount').textContent=out.length+' کانفیگ بهینه شد';
+ $('optRes').style.display='block';
+ $('optBtn').disabled=false;$('optBtn').textContent='اعمال بهینه‌سازی';
+ toast(out.length+' کانفیگ بهینه شد');
+ if(S.notif&&navigator.vibrate)navigator.vibrate(100);
+}
+function copyOpt(){copyText($('optOut').value);toast('خروجی کپی شد')}
+
+/* ---------- آمار ---------- */
+function renderStats(){
+ const h=JSON.parse(localStorage.getItem('cfscan_hist')||'[]');
+ const g=JSON.parse(localStorage.getItem(GOOD_KEY)||'[]');
+ const totIP=h.reduce((a,e)=>a+(+e.n||0),0);
+ const best=h.reduce((a,e)=>Math.max(a,+e.sc||0),0);
+ $('stTotalScans').textContent=fmt(h.length);
+ $('stTotalIP').textContent=fmt(totIP);
+ $('stBestEver').textContent=best?best.toFixed(1):'—';
+ $('stGood').textContent=fmt(g.length);
+ const data=h.slice(0,20).reverse().map(e=>+e.sc||0);
+ drawStatChart(data);
+}
+function drawStatChart(data){
+ const c=$('statChart');if(!c)return;const x=c.getContext('2d');x.clearRect(0,0,600,220);
+ x.strokeStyle='rgba(140,150,170,.15)';x.fillStyle='#8a94a7';x.font='16px Vazirmatn';
+ for(let i=0;i<=4;i++){const y=200-i*50;x.beginPath();x.moveTo(30,y);x.lineTo(590,y);x.stroke();x.fillText(String(i*25),2,y+5)}
+ if(data.length<2){x.fillStyle='#8a94a7';x.font='20px Vazirmatn';x.fillText('داده کافی نیست — چند اسکن انجام بده',140,110);return}
+ x.strokeStyle='#3b82f6';x.lineWidth=3;x.beginPath();
+ data.forEach((v,i)=>{const px=30+i*(560/(data.length-1));const py=200-(v/100)*200;i?x.lineTo(px,py):x.moveTo(px,py)});
+ x.stroke();
+}
 
 function ip2int(ip){return ip.split('.').reduce((a,o)=>((a<<8)+ +o)>>>0,0)>>>0}
 function int2ip(n){return[(n>>>24)&255,(n>>>16)&255,(n>>>8)&255,n&255].join('.')}
@@ -425,11 +585,19 @@ async function deepTest(r0){
 async function startScan(){
  if(running)return toast('اسکن در حال اجراست');
  readSettings();
+ loadCaches();
  let list=[];
- if(S.source==='cf'){const per=Math.ceil(S.total/12);CF_RANGES.forEach(r=>{for(let i=0;i<per;i++)list.push(randIP(r))})}
+ if(S.source==='cf'){
+  const per=Math.ceil(S.total/12);
+  CF_RANGES.forEach(r=>{for(let i=0;i<per;i++)list.push((HOT.length&&Math.random()<0.5)?hotIP():randIP(r))});
+ }
  else if(S.source==='custom'){list=parseCustom(S.custom);if(!list.length)return toast('رنج معتبر وارد نشده');if(list.length>S.total)list=shuffle(list).slice(0,S.total)}
  else{list=(JSON.parse(localStorage.getItem(GOOD_KEY)||'[]')).map(g=>g.ip);if(!list.length)return toast('لیست IP خوب خالی است — اول یک اسکن بزنید')}
  list=shuffle([...new Set(list)]);
+ const before=list.length;
+ list=list.filter(ip=>!NEG[ip]);
+ if(before-list.length)toast((before-list.length)+' IP از کش منفی حذف شد');
+ if(!list.length)return toast('لیستی برای اسکن نموند — کش رو پاک کن');
  results=[];chartData=[];dist=[0,0,0,0,0];done1=0;done2=0;assigned=0;totalQ=list.length;stopFlag=false;running=true;
  $('settingsPanel').style.display='none';$('progressPanel').style.display='block';go('scan');
  $('homeBadge').textContent='در حال اسکن...';
@@ -439,8 +607,9 @@ async function startScan(){
  const conc=Math.max(1,Math.min(S.threads,60));
  const w=Array.from({length:Math.min(conc,list.length)},async()=>{
   while(!stopFlag){const my=idx++;if(my>=list.length)break;assigned++;
-   const r=await evalIP(list[my]);done1++;
-   if(r.ok>0)results.push(r);
+   const ip=list[my];
+   const r=await evalIP(ip);done1++;
+   if(r.ok>0)results.push(r);else NEG[ip]=Date.now();
    updateProgress();
   }});
  await Promise.all(w);
@@ -476,6 +645,7 @@ function finish(){
  $('settingsPanel').style.display='block';$('progressPanel').style.display='none';
  $('homeBadge').textContent='آماده برای اسکن';
  results.sort((a,b)=>b.score-a.score);
+ /* حافظه خوب‌ها */
  const good=results.filter(r=>r.score>=90&&r.jit<=100);
  if(good.length){
   const prev=JSON.parse(localStorage.getItem(GOOD_KEY)||'[]');
@@ -484,9 +654,26 @@ function finish(){
   localStorage.setItem(GOOD_KEY,JSON.stringify([...map.values()].slice(0,50)));
   updGood();
  }
+ /* heatmap subnet ها */
+ const heat=JSON.parse(localStorage.getItem(HEAT_KEY)||'{}');
+ results.forEach(r=>{const p=prefOf(r.ip);if(r.score>=90&&r.jit<=100)heat[p]=(heat[p]||0)+2;else if(passed(r))heat[p]=(heat[p]||0)+1});
+ const pruned=Object.fromEntries(Object.entries(heat).sort((a,b)=>b[1]-a[1]).slice(0,100));
+ localStorage.setItem(HEAT_KEY,JSON.stringify(pruned));
+ /* کش منفی */
+ const cut=Date.now()-6*3600e3;for(const k in NEG)if(NEG[k]<cut)delete NEG[k];
+ localStorage.setItem(NEG_KEY,JSON.stringify(NEG));
+ loadCaches();
+ /* ماندگاری نتایج */
+ try{localStorage.setItem(RES_KEY,JSON.stringify(results.slice(0,400)))}catch(e){}
  renderResults();renderHistoryAdd();
  const v=results.filter(r=>passed(r)).length;
+ if(S.notif&&navigator.vibrate)navigator.vibrate([200,100,200]);
  toast((stopFlag?'متوقف شد':'اسکن تمام شد')+' — '+v+' IP پاس شد');
+ if(S.auto){
+  clearTimeout(autoTimer);
+  autoTimer=setTimeout(()=>{if(!running)startScan()},S.autoMin*60000);
+  setTimeout(()=>toast('اسکن خودکار: '+S.autoMin+' دقیقه دیگه'),2600);
+ }
  setTimeout(()=>go('results'),600);
 }
 function passed(r){return r.verified||r.score>=S.minScore}
@@ -574,17 +761,33 @@ function applyTheme(){document.documentElement.dataset.theme=S.theme;$('swTheme'
 function tglSw(el,k){S[k]=!S[k];el.classList.toggle('on',S[k]);saveSet()}
 function updCache(){let b=0;for(const k in localStorage)if(k.startsWith('cfscan_'))b+=(localStorage[k].length||0)*2;
  $('cacheSize').textContent=b>1048576?(b/1048576).toFixed(1)+' MB':(b/1024).toFixed(1)+' KB'}
-function clearCache(){['cfscan_hist','cfscan_set',GOOD_KEY,LINK_KEY].forEach(k=>localStorage.removeItem(k));toast('کش پاک شد');updCache();updGood();updBaseLink()}
+function clearCache(){['cfscan_hist','cfscan_set',GOOD_KEY,LINK_KEY,HEAT_KEY,NEG_KEY,RES_KEY,OPT_KEY].forEach(k=>localStorage.removeItem(k));toast('کش پاک شد');updCache();updGood();updBaseLink();results=[];renderResults();renderBest()}
 $('testsSeg').querySelectorAll('button').forEach(b=>b.onclick=()=>{S.tests=+b.dataset.v;$('testsSeg').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));$('testsVal').textContent=b.dataset.v});
 $('resFilter').querySelectorAll('button').forEach(b=>b.onclick=()=>{resF=b.dataset.f;$('resFilter').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));renderResults()});
 $('resSort').querySelectorAll('button').forEach(b=>b.onclick=()=>{sortM=b.dataset.s;$('resSort').querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b));renderResults()});
 [['totalR','totalVal',''],['thrR','thrVal',''],['toR','toVal',' ثانیه'],['minR','minVal','']].forEach(([r,v,s])=>{$(r).oninput=()=>{$(v).textContent=$(r).value+s}});
+['optAdr','optCs','optFm'].forEach(id=>{$(id).addEventListener('input',saveOpt)});
+$('optFp').addEventListener('change',saveOpt);
 $('srcSel').value=S.source;srcChange();$('customRanges').value=S.custom;$('portIn').value=S.port;
 $('totalR').value=S.total;$('totalVal').textContent=S.total;$('thrR').value=S.threads;$('thrVal').textContent=S.threads;
 $('toR').value=S.timeout;$('toVal').textContent=S.timeout+' ثانیه';$('minR').value=S.minScore;$('minVal').textContent=S.minScore;
+$('autoMin').value=S.autoMin;
 $('swNotif').classList.toggle('on',S.notif);$('swSave').classList.toggle('on',S.save);
 $('swVerify').classList.toggle('on',S.verify);$('swPort').classList.toggle('on',S.multiPort);
+$('swAuto').classList.toggle('on',S.auto);
 applyTheme();renderHistory();updCache();updGood();updBaseLink();renderDist();drawChart();
+loadCaches();loadOptUI();
+/* بارگذاری نتایج قبلی بعد از رفرش */
+try{
+ const pr=JSON.parse(localStorage.getItem(RES_KEY)||'null');
+ if(pr&&pr.length){
+  results=pr;renderResults();renderBest();
+  $('stScanned').textContent=fmt(results.length);
+  $('stOk').textContent=fmt(results.filter(r=>r.ok>0).length);
+  const pings=results.filter(r=>r.ping);
+  if(pings.length){$('stPing').textContent=Math.min(...pings.map(r=>r.ping))+' ms';$('stScore').textContent=Math.max(...results.map(r=>r.score)).toFixed(1)}
+ }
+}catch(e){}
 </script>
 </body>
 </html>
