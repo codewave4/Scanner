@@ -139,7 +139,7 @@ nav button.on{color:var(--blue)}
  </div>
  <div class="card"><h3>پیشرفت اسکن <span class="rv" id="homePct">0%</span></h3><div class="pbar"><i id="homeBar"></i></div></div>
  <div class="card"><h3>نمودار تاخیر (زنده)</h3><canvas id="chart" width="600" height="220"></canvas></div>
- <div class="card"><h3>بهترین IP ها</h3><div id="bestList"><div class="muted">هنوز اسکنی انجام نشده است</div></div></div>
+ <div class="card"><h3>بهترین IP ها</h3><div id="bestList"><div class="muted">هنوز نتیجه ای نیست</div></div></div>
  <button class="btn" onclick="startFromHome()">شروع اسکن</button>
 </section>
 
@@ -222,7 +222,7 @@ nav button.on{color:var(--blue)}
  <div class="ptitle">بهینه‌ساز کانفیگ</div>
  <div class="card">
   <h3>کانفیگ / ساب ورودی</h3>
-  <textarea id="optIn" style="min-height:110px" placeholder="vless://...&#10;trojan://...&#10;https://example.com/sub"></textarea>
+  <textarea id="optIn" style="min-height:110px" placeholder="vless://...&#10;trojan://...&#10;https://example.com/sub&#10;یا JSON کامل (کلش / Xray / sing-box)"></textarea>
   <button class="btn" id="optBtn" onclick="runOptimize()">اعمال بهینه‌سازی</button>
   <div id="optRes" style="display:none">
    <p class="muted" style="margin-top:10px" id="optCount"></p>
@@ -299,13 +299,12 @@ nav button.on{color:var(--blue)}
 
 <div class="modal" id="aboutModal" onclick="if(event.target===this)this.classList.remove('show')">
  <div class="mbox">
-  <div class="mhead"><div class="mlogo"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></div><div><h2>اسکنر IP کلادفلر</h2><div class="ver">نسخه 4.9 — نسخه وب (GitHub Pages)</div></div></div>
+  <div class="mhead"><div class="mlogo"><svg viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5-3.5 8.5-8 10-4.5-1.5-8-5-8-10V6z"/></svg></div><div><h2>اسکنر IP کلادفلر</h2><div class="ver">نسخه 4.10 — نسخه وب (GitHub Pages)</div></div></div>
   <p>اسکنر آنلاین و رایگان پیدا کردن IP تمیز و پایدار کلادفلر — مستقیم داخل مرورگر، بدون نصب.</p>
   <p>✦ اسکن دومرحله‌ای + امتیازدهی هوشمند<br>
-  ✦ حافظه subnet هوشمند (یادگیری بازه‌های خوب)<br>
-  ✦ کش منفی (تست نکردن IP های مردودی اخیر)<br>
-  ✦ ماندگاری نتایج بعد از رفرش صفحه<br>
-  ✦ بهینه‌ساز ساب/کانفیگ با تنظیمات پیشرفته<br>
+  ✦ حافظه subnet هوشمند + کش منفی<br>
+  ✦ بهینه‌ساز ساب با پشتیبانی JSON (کلش/Xray/sing-box)<br>
+  ✦ تولیدکننده کانفیگ PattNG (لینک هوشمند)<br>
   ✦ اسکن خودکار + ویبره + صفحه آمار</p>
   <p>ساخته‌شده با ❤️ برای دور زدن محدودیت‌ها</p>
   <button class="btn tg" onclick="openTelegram()">عضویت در کانال تلگرام</button>
@@ -364,7 +363,6 @@ function fallbackCopy(t){const ta=document.createElement('textarea');ta.value=t;
 function copyText(t){if(navigator.clipboard)navigator.clipboard.writeText(t).catch(()=>fallbackCopy(t));else fallbackCopy(t)}
 function copyIP(ip){copyText(ip);toast('کپی شد: '+ip)}
 
-/* ---------- حافظه هوشمند: heatmap + کش منفی ---------- */
 function loadCaches(){
  try{NEG=JSON.parse(localStorage.getItem(NEG_KEY)||'{}')}catch(e){NEG={}}
  const cut=Date.now()-6*3600e3;let ch=false;
@@ -376,14 +374,12 @@ function loadCaches(){
 function hotIP(){const p=HOT[Math.floor(Math.random()*HOT.length)];return p+'.'+Math.floor(Math.random()*256)}
 function prefOf(ip){return ip.split('.').slice(0,3).join('.')}
 
-/* ---------- تنظیمات پیشرفته بهینه‌ساز ---------- */
 function optFmOk(){try{JSON.parse(OPT.fm);return true}catch(e){return false}}
 function valOptFm(){const el=$('optFmH');if(optFmOk()){el.textContent='✓ JSON معتبر';el.style.color='var(--green)'}else{el.textContent='✗ JSON نامعتبر — پیش‌فرض استفاده می‌شه';el.style.color='var(--red)'}}
 function loadOptUI(){$('optAdr').value=OPT.adr||'';$('optFp').value=OPT.fp||'unsafe';$('optCs').value=OPT.cs||CIPHERS;$('optFm').value=OPT.fm||FINAL_MASK;valOptFm()}
 function saveOpt(){OPT={adr:$('optAdr').value.trim(),fp:$('optFp').value,cs:$('optCs').value.trim()||CIPHERS,fm:$('optFm').value.trim()||FINAL_MASK};localStorage.setItem(OPT_KEY,JSON.stringify(OPT));valOptFm()}
 function resetOpt(){OPT={adr:'',fp:'unsafe',cs:CIPHERS,fm:FINAL_MASK};localStorage.setItem(OPT_KEY,JSON.stringify(OPT));loadOptUI();toast('بازنشانی شد')}
 
-/* ---------- تولیدکننده کانفیگ (لینک هوشمند با IP) ---------- */
 function buildLink(base,ip){
  const b=base.trim();
  try{
@@ -428,7 +424,7 @@ function saveBaseLink(){
 }
 function updBaseLink(){$('baseLinkVal').textContent=localStorage.getItem(LINK_KEY)?'ذخیره شده ✔':'تنظیم نشده'}
 
-/* ---------- بهینه‌ساز ساب/کانفیگ (با تنظیمات پیشرفته) ---------- */
+/* ---------- بهینه‌ساز: استخراج + تبدیل JSON ---------- */
 const ANY_PROTO=/^(vless|vmess|trojan|ss|ssr|hysteria2?|tuic):\/\//i;
 function applyOptLine(l){
  const t=l.trim();
@@ -455,14 +451,85 @@ function extractConfigs(t){
  if(!out.length){const d=b64dec(t);if(d)d.split(/\r?\n/).forEach(l=>{l=l.trim();if(ANY_PROTO.test(l))out.push(l)})}
  return out;
 }
+function entryToLink(e){
+ const type=String(e.type||e.protocol||'').toLowerCase();
+ const ss=e.streamSettings||{};
+ const server=e.server||e.add||(e.settings?e.settings.address:null)||'';
+ const port=e.port||e.server_port||(e.settings?e.settings.port:null)||443;
+ const id=e.uuid||e.id||(e.settings?e.settings.id:null)||'';
+ const pass=e.password||(e.settings?e.settings.password:null)||'';
+ const name=String(e.name||e.ps||e.remarks||e.tag||'config');
+ if(!/^(vless|vmess|trojan|ss|shadowsocks)$/.test(type)){ if(!(e.add&&e.id)) return null; }
+ const net=String(e.network||e.net||ss.network||'tcp').toLowerCase();
+ const tls=String(e.tls||ss.security||'').toLowerCase();
+ const t=ss.tlsSettings||ss.realitySettings||{};
+ const sni=e.servername||e.sni||t.serverName||'';
+ const ws=ss.wsSettings||ss.xhttpSettings||ss.grpcSettings||{};
+ const path=ws.path||e.path||'/';
+ const host=e.host||(ws.headers?(ws.headers.Host||ws.headers.host):'')||'';
+ const fp=e.fingerprint||e.fp||t.fingerprint||'';
+ try{
+  if(type==='vless'){
+   if(!server||!id)return null;
+   const u=new URL('vless://'+id+'@'+server+':'+port);
+   const sp=u.searchParams;
+   sp.set('encryption','none');
+   if(tls)sp.set('security',tls);
+   if(sni)sp.set('sni',sni);
+   sp.set('type',net);
+   if(path&&path!=='/')sp.set('path',path);
+   if(host)sp.set('host',host);
+   if(fp)sp.set('fp',fp);
+   u.hash=encodeURIComponent(name);
+   return u.toString();
+  }
+  if(type==='vmess'){
+   if(!server||!id)return null;
+   const obj={v:'2',ps:name,add:server,port:String(port),id:id,aid:String(e.alterId||e.aid||0),scy:e.cipher||e.scy||'auto',net:net,tls:tls||'none'};
+   if(sni)obj.sni=sni;if(path)obj.path=path;if(host)obj.host=host;if(fp)obj.fp=fp;
+   return 'vmess://'+btoa(unescape(encodeURIComponent(JSON.stringify(obj))));
+  }
+  if(type==='trojan'){
+   if(!server||!pass)return null;
+   const u=new URL('trojan://'+encodeURIComponent(pass)+'@'+server+':'+port);
+   const sp=u.searchParams;
+   sp.set('security',tls||'tls');
+   if(sni)sp.set('sni',sni);
+   sp.set('type',net);
+   if(path&&path!=='/')sp.set('path',path);
+   u.hash=encodeURIComponent(name);
+   return u.toString();
+  }
+  if(type==='ss'||type==='shadowsocks'){
+   if(!server)return null;
+   const method=e.method||e.cipher||'aes-256-gcm';
+   return 'ss://'+btoa(method+':'+(pass||id))+'@'+server+':'+port+'#'+encodeURIComponent(name);
+  }
+ }catch(err){}
+ return null;
+}
+function extractFromJSON(text){
+ let j;try{j=JSON.parse(text)}catch(e){return []}
+ const links=[];
+ const arr=Array.isArray(j)?j:(j.proxies||j.outbounds||[]);
+ if(Array.isArray(arr))arr.forEach(e=>{if(e&&typeof e==='object'){const l=entryToLink(e);if(l)links.push(l)}});
+ if(!links.length)walkJSON(j,links);
+ return links;
+}
+function walkJSON(o,links){
+ if(!o||typeof o!=='object')return;
+ if(Array.isArray(o)){o.forEach(x=>walkJSON(x,links));return}
+ const l=entryToLink(o);if(l)links.push(l);
+ Object.values(o).forEach(v=>{if(typeof v==='object')walkJSON(v,links)});
+}
 async function fetchSubText(u){
- const proxies=['','https://corsproxy.io/?','https://api.allorigins.win/raw?url='];
+ const proxies=['','https://api.allorigins.win/raw?url=','https://corsproxy.io/?url=','https://api.codetabs.com/v1/proxy?quest=','https://r.jina.ai/'];
  for(const p of proxies){
   try{
-   const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),9000);
+   const ctrl=new AbortController();const to=setTimeout(()=>ctrl.abort(),10000);
    const r=await fetch(p+(p?encodeURIComponent(u):u),{signal:ctrl.signal});
    clearTimeout(to);
-   if(r.ok)return await r.text();
+   if(r.ok){const txt=await r.text();if(txt&&txt.trim())return txt}
   }catch(e){}
  }
  throw new Error('fetch failed');
@@ -473,10 +540,14 @@ async function runOptimize(){
  const lines=raw.split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
  const subs=lines.filter(l=>/^https?:\/\//i.test(l));
  let configs=lines.filter(l=>ANY_PROTO.test(l));
+ if(!configs.length&&!subs.length)configs=extractFromJSON(raw);
  $('optBtn').disabled=true;$('optBtn').textContent='در حال پردازش...';
  for(const s of subs){
-  try{const txt=await fetchSubText(s);configs=configs.concat(extractConfigs(txt))}
-  catch(e){toast('ساب دریافت نشد: '+s.slice(0,30))}
+  try{
+   const txt=await fetchSubText(s);
+   const fromLines=extractConfigs(txt);
+   configs=configs.concat(fromLines.length?fromLines:extractFromJSON(txt));
+  }catch(e){toast('ساب دریافت نشد: '+s.slice(0,30))}
  }
  configs=[...new Set(configs)];
  const out=configs.map(applyOptLine);
@@ -645,7 +716,6 @@ function finish(){
  $('settingsPanel').style.display='block';$('progressPanel').style.display='none';
  $('homeBadge').textContent='آماده برای اسکن';
  results.sort((a,b)=>b.score-a.score);
- /* حافظه خوب‌ها */
  const good=results.filter(r=>r.score>=90&&r.jit<=100);
  if(good.length){
   const prev=JSON.parse(localStorage.getItem(GOOD_KEY)||'[]');
@@ -654,16 +724,13 @@ function finish(){
   localStorage.setItem(GOOD_KEY,JSON.stringify([...map.values()].slice(0,50)));
   updGood();
  }
- /* heatmap subnet ها */
  const heat=JSON.parse(localStorage.getItem(HEAT_KEY)||'{}');
  results.forEach(r=>{const p=prefOf(r.ip);if(r.score>=90&&r.jit<=100)heat[p]=(heat[p]||0)+2;else if(passed(r))heat[p]=(heat[p]||0)+1});
  const pruned=Object.fromEntries(Object.entries(heat).sort((a,b)=>b[1]-a[1]).slice(0,100));
  localStorage.setItem(HEAT_KEY,JSON.stringify(pruned));
- /* کش منفی */
  const cut=Date.now()-6*3600e3;for(const k in NEG)if(NEG[k]<cut)delete NEG[k];
  localStorage.setItem(NEG_KEY,JSON.stringify(NEG));
  loadCaches();
- /* ماندگاری نتایج */
  try{localStorage.setItem(RES_KEY,JSON.stringify(results.slice(0,400)))}catch(e){}
  renderResults();renderHistoryAdd();
  const v=results.filter(r=>passed(r)).length;
@@ -777,7 +844,6 @@ $('swVerify').classList.toggle('on',S.verify);$('swPort').classList.toggle('on',
 $('swAuto').classList.toggle('on',S.auto);
 applyTheme();renderHistory();updCache();updGood();updBaseLink();renderDist();drawChart();
 loadCaches();loadOptUI();
-/* بارگذاری نتایج قبلی بعد از رفرش */
 try{
  const pr=JSON.parse(localStorage.getItem(RES_KEY)||'null');
  if(pr&&pr.length){
