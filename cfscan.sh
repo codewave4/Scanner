@@ -1,10 +1,10 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # ===================================================
-#  RED | Cloudflare Clean IP Scanner - Termux (v10)
-#  Light speed + multi-port + jitter + Xray verify
+#  RED | Cloudflare Clean IP Scanner - Termux (v11)
+#  Best-first ranking by Loss+Delay+Jitter+Speed
 # ===================================================
 G='\033[1;32m';Y='\033[1;33m';R='\033[1;31m';C='\033[1;36m';B='\033[1m';NC='\033[0m'
-TIMEOUT=3
+TIMEOUT=3;PASS=60
 OUT="$HOME/cf_clean_ips.txt";DONE="$HOME/.red_done";LNK="$HOME/.red_link"
 TMP=$(mktemp -d);XDIR="$HOME/red_xray"
 DLBYTES=5000000;ULBYTES=2000000
@@ -21,7 +21,7 @@ cat <<'EOF'
 ╚═╝  ╚═╝╚══════╝╚═════╝
 EOF
 echo -e "${NC}${B}   ⚡ CLOUDFLARE CLEAN IP SCANNER${NC}"
-echo -e "${C}   v10: light speed + multi-port + jitter + Xray"
+echo -e "${C}   v11: best-first ranking (Loss+Delay+Jitter+Speed)"
 echo -e "${C}   t.me/RedProjectX${NC}"
 echo -e "${C}──────────────────────────────────────────────${NC}"
 echo
@@ -108,16 +108,14 @@ scan_ip(){
  [ $ok -eq 0 ] && return
  local loss=$(( (att-ok)*100/att ))
  local tcp_avg=$(echo $tcps | tr ' ' '\n' | grep -v '^$' | sort -n | awk -v n=$ok 'NR==int((n+1)/2){print}')
- local tls_avg=$((tls_sum/ok))
  local jit=$(echo $tcps | tr ' ' '\n' | grep -v '^$' | sort -n | awk 'NR==1{m=$1}{M=$1}END{print M-m}')
  [ -z "$jit" ] && jit=0
- local score=$(awk -v ok=$ok -v att=$att -v tcp=$tcp_avg -v tls=$tls_avg -v jit=$jit 'BEGIN{
-   succ=ok/att; lat=(tcp<=40)?100:100-(tcp-40)*0.25; if(lat<0)lat=0;
-   tl=(tls<=120)?100:100-(tls-120)*0.2; if(tl<0)tl=0;
-   st=(jit<=20)?10:(jit<=60?6:(jit<=120?3:0));
-   sc=succ*55+lat*25+tl*10+st; if(sc>100)sc=100; printf "%.1f",sc}')
- if awk -v s="$score" 'BEGIN{exit !(s>=80)}'; then echo -e "${G}✔ $ip | TCP ${tcp_avg}ms | JIT ${jit}ms | SCORE $score${NC}"; fi
- echo "$score|$ip|$tcp_avg|$tls_avg|$loss|$jit" >> "$TMP/res"
+ local score=$(awk -v loss=$loss -v tcp=$tcp_avg -v jit=$jit 'BEGIN{
+   dly=(tcp<=40)?100:100-(tcp-40)*0.25; if(dly<0)dly=0;
+   jt=(jit<=20)?100:100-(jit-20)*0.3;  if(jt<0)jt=0;
+   sc=(100-loss)*0.45 + dly*0.30 + jt*0.25; printf "%.1f",sc}')
+ if awk -v s="$score" -v p=$PASS 'BEGIN{exit !(s>=p)}'; then echo -e "${G}✔ $ip | TCP ${tcp_avg}ms | JIT ${jit}ms | SCORE $score${NC}"; fi
+ echo "$score|$ip|$tcp_avg|$loss|$jit" >> "$TMP/res"
 }
 
 urldec(){ printf '%b' "${1//%/\\x}"; }
@@ -196,27 +194,28 @@ show_results(){
    else echo -e "${Y}Xray verify skipped (non-TLS)${NC}"; fi
   else echo -e "${Y}Xray verify unavailable${NC}"; fi
  fi
+ # combine + final quality score + best-first sort
  : > "$TMP/comb"
- while IFS='|' read -r sc ip tcp tls loss jit; do
+ while IFS='|' read -r sc ip tcp loss jit; do
   dl=$(awk -F'|' -v ip="$ip" '$1==ip{print $2}' "$TMP/spd"); [ -z "$dl" ] && dl=0
   ul=$(awk -F'|' -v ip="$ip" '$1==ip{print $3}' "$TMP/spd"); [ -z "$ul" ] && ul=0
   bp=$(awk -F'|' -v ip="$ip" '$1==ip{print $2}' "$TMP/prt"); [ -z "$bp" ] && bp=$PORT
   xl=$(awk -F'|' -v ip="$ip" '$1==ip{print $2}' "$TMP/xr"); [ -z "$xl" ] && xl=-
-  key=$(awk -v a="$dl" -v b="$ul" -v s="$sc" 'BEGIN{printf "%.2f", (a+b>0)? a+b : s}')
-  echo "$key|$ip|$bp|$loss|$tcp|$jit|$dl|$ul|$sc|$xl" >> "$TMP/comb"
+  q=$(awk -v sc="$sc" -v dl="$dl" -v ul="$ul" 'BEGIN{sp=dl+ul; q=sc; if(sp>0){s2=(sp*8>100)?100:sp*8; q=sc*0.7+s2*0.3} printf "%.1f",q}')
+  echo "$q|$ip|$bp|$loss|$tcp|$jit|$dl|$ul|$xl" >> "$TMP/comb"
  done < "$TMP/res"
  sort -t'|' -k1,1rn "$TMP/comb" > "$TMP/final"
- echo; echo -e "${G}${B}Results:${NC}"
+ echo; echo -e "${G}${B}Results (best first):${NC}"
  printf "${B}%-4s %-16s %-6s %-6s %-7s %-6s %-8s %-8s %-6s${NC}\n" "RANK" "IP" "PORT" "LOSS" "DELAY" "JIT" "DOWN" "UP" "SCORE"
  : > "$OUT"; local rank=0
- while IFS='|' read -r key ip bp loss tcp jit dl ul sc xl; do
+ while IFS='|' read -r q ip bp loss tcp jit dl ul xl; do
   rank=$((rank+1))
-  if awk -v s="$sc" 'BEGIN{exit !(s>=80)}'; then color=$G; echo "$ip" >> "$OUT"; else color=$Y; fi
-  [ "$xl" != "-" ] && sc="${sc}⭐"
-  printf "${color}%-4s %-16s %-6s %-6s %-7s %-6s %-8s %-8s %-6s${NC}\n" "$rank." "$ip" "$bp" "$loss%" "${tcp}ms" "${jit}ms" "$dl" "$ul" "$sc"
+  if awk -v s="$q" -v p=$PASS 'BEGIN{exit !(s>=p)}'; then color=$G; echo "$ip" >> "$OUT"; else color=$Y; fi
+  [ "$xl" != "-" ] && q="${q}⭐"
+  printf "${color}%-4s %-16s %-6s %-6s %-7s %-6s %-8s %-8s %-6s${NC}\n" "$rank." "$ip" "$bp" "$loss%" "${tcp}ms" "${jit}ms" "$dl" "$ul" "$q"
  done < "$TMP/final"
  echo
- echo -e "${R}${B}RED${NC} ${G}✔ $(wc -l < "$OUT") clean IPs saved to:${NC} $OUT"
+ echo -e "${R}${B}RED${NC} ${G}✔ $(wc -l < "$OUT") clean IPs saved (best first) to:${NC} $OUT"
 }
 
 : > "$TMP/res"
