@@ -1,33 +1,33 @@
 #!/data/data/com.termux/files/usr/bin/bash
-# ═══════════════════════════════════════════════
-#  اسکنر IP تمیز کلادفلر — نسخه Termux
-#  تست واقعی TLS + سرعت با curl --resolve
-# ═══════════════════════════════════════════════
-GREEN='\033[1;32m';YELLOW='\033[1;33m';RED='\033[1;31m';CYAN='\033[1;36m';BOLD='\033[1m';NC='\033[0m'
-DOMAIN="speed.cloudflare.com";PORT=443
+# ===================================================
+#  Cloudflare Clean IP Scanner - Termux Edition (v2)
+#  Xray-optimized: real TCP/TLS/Speed measurement
+# ===================================================
+G='\033[1;32m';Y='\033[1;33m';R='\033[1;31m';C='\033[1;36m';B='\033[1m';N='\033[0m'
+DOMAIN="speed.cloudflare.com";PORT=443;TIMEOUT=5
 OUT="$HOME/cf_clean_ips.txt";TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 clear
-echo -e "${CYAN}${BOLD}╔════════════════════════════════════╗
-║  اسکنر IP تمیز کلادفلر — Termux Edition  ║
-╚════════════════════════════════════╝${NC}"
+echo -e "${C}${B}+==========================================+
+|  Cloudflare Clean IP Scanner - Termux    |
+|  Xray-optimized core (TCP/TLS/Speed)     |
++==========================================+${N}"
 
 for p in curl gawk grep coreutils; do
-  command -v "$p" >/dev/null 2>&1 || { echo -e "${YELLOW}نصب $p ...${NC}"; pkg install -y "$p" >/dev/null 2>&1; }
+  command -v "$p" >/dev/null 2>&1 || { echo -e "${Y}Installing $p ...${N}"; pkg install -y "$p" >/dev/null 2>&1; }
 done
 
-echo -e "${CYAN}1)${NC} اسکن تصادفی از رنج‌های کلادفلر"
-echo -e "${CYAN}2)${NC} رنج سفارشی (مثلاً 198.41.223)"
-echo -e "${CYAN}3)${NC} لیست IP از فایل (تک‌خطی)"
-read -p "انتخاب [1/2/3]: " MODE
+echo -e "${C}1)${N} Random Cloudflare ranges"
+echo -e "${C}2)${N} Custom range (e.g. 198.41.223)"
+echo -e "${C}3)${N} IP list from file (one per line)"
+read -p "Select [1/2/3]: " MODE
 PREFIX="";FLIST=""
-[ "$MODE" = 2 ] && read -p "پیشوند رنج (xxx.xxx.xxx): " PREFIX
-[ "$MODE" = 3 ] && read -p "مسیر فایل IP ها: " FLIST
-read -p "تعداد IP برای اسکن [100]: " N;N=${N:-100}
-read -p "تعداد تست هر IP [3]: " TESTS;TESTS=${TESTS:-3}
-read -p "تست سرعت دانلود؟ y/n [y]: " SPEED;SPEED=${SPEED:-y}
-read -p "اتصال همزمان [10]: " CONC;CONC=${CONC:-10}
-TIMEOUT=3
+[ "$MODE" = 2 ] && read -p "Range prefix (xxx.xxx.xxx): " PREFIX
+[ "$MODE" = 3 ] && read -p "IP list file path: " FLIST
+read -p "Number of IPs [100]: " N;N=${N:-100}
+read -p "Tests per IP [3]: " TESTS;TESTS=${TESTS:-3}
+read -p "Download speed test? y/n [y]: " SPEED;SPEED=${SPEED:-y}
+read -p "Concurrency [10]: " CONC;CONC=${CONC:-10}
 
 rand_ip(){
  if [ -n "$PREFIX" ]; then echo "$PREFIX.$((1+RANDOM%254))";return; fi
@@ -47,57 +47,68 @@ rand_ip(){
  esac
 }
 
-test_lat(){
- local t=$(curl -s -o /dev/null -w '%{time_total}' --resolve "$DOMAIN:$PORT:$1" --max-time "$TIMEOUT" "https://$DOMAIN/cdn-cgi/trace" 2>/dev/null)
- [ -z "$t" ] && { echo FAIL;return; }
- awk -v t="$t" 'BEGIN{printf "%d", t*1000+0.5}'
+probe(){ # real TCP + TLS + total time; FAIL unless HTTP 200
+ local w=$(curl -s -o /dev/null -w '%{http_code} %{time_connect} %{time_appconnect} %{time_total}' \
+   --resolve "$DOMAIN:$PORT:$1" --max-time "$TIMEOUT" "https://$DOMAIN/cdn-cgi/trace" 2>/dev/null)
+ [ "${w%% *}" = "200" ] || { echo FAIL;return; }
+ echo "$w" | awk '{printf "%d %d %d", $2*1000+0.5, ($3-$2)*1000+0.5, $4*1000+0.5}'
 }
 
-test_speed(){
- local s=$(curl -s -o /dev/null -w '%{speed_download}' --resolve "$DOMAIN:$PORT:$1" --max-time 6 "https://$DOMAIN/__down?bytes=2000000" 2>/dev/null)
- [ -z "$s" ] && { echo 0.00;return; }
- awk -v s="$s" 'BEGIN{printf "%.2f", s/1048576}'
+speed_test(){
+ local w=$(curl -s -o /dev/null -w '%{http_code} %{speed_download}' \
+   --resolve "$DOMAIN:$PORT:$1" --max-time 7 "https://$DOMAIN/__down?bytes=3000000" 2>/dev/null)
+ [ "${w%% *}" = "200" ] || { echo 0.00;return; }
+ echo "$w" | awk '{printf "%.2f", $2/1048576}'
 }
 
 scan_ip(){
- local ip=$1 ok=0 sum=0 ms
+ local ip=$1 ok=0 tcps="" tls_sum=0 t tcp tls tot
  for i in $(seq 1 "$TESTS"); do
-  ms=$(test_lat "$ip")
-  if [ "$ms" != FAIL ]; then ok=$((ok+1));sum=$((sum+ms)); fi
+  t=$(probe "$ip")
+  if [ "$t" != FAIL ]; then
+   read -r tcp tls tot <<< "$t"
+   ok=$((ok+1)); tcps="$tcps $tcp"; tls_sum=$((tls_sum+tls))
+  fi
  done
  [ $ok -eq 0 ] && return
- local loss=$(( (TESTS-ok)*100/TESTS )) avg=$((sum/ok)) spd=0.00
- if [ "$SPEED" = y ] && [ $loss -eq 0 ] && [ $avg -le 300 ]; then spd=$(test_speed "$ip"); fi
- local score=$(awk -v ok=$ok -v ts=$TESTS -v avg=$avg 'BEGIN{
-   succ=ok/ts; lat=(avg<=50)?100:100-(avg-50)*0.28; if(lat<0)lat=0;
-   sc=succ*60+lat*0.25+15; if(sc>100)sc=100; printf "%.1f",sc}')
- echo "$score|$ip|$avg|$loss|$spd" >> "$TMP/res"
+ local loss=$(( (TESTS-ok)*100/TESTS ))
+ local tcp_avg=$(echo $tcps | tr ' ' '\n' | grep -v '^$' | sort -n | awk -v n=$ok 'NR==int((n+1)/2){print}')
+ local tls_avg=$((tls_sum/ok)) spd=0.00
+ if [ "$SPEED" = y ] && [ $loss -eq 0 ] && [ "$tcp_avg" -le 500 ]; then spd=$(speed_test "$ip"); fi
+ local score=$(awk -v ok=$ok -v ts=$TESTS -v tcp=$tcp_avg -v tls=$tls_avg -v spd=$spd -v st=$([ "$SPEED" = y ] && echo 1 || echo 0) 'BEGIN{
+   succ=ok/ts;
+   lat=(tcp<=40)?100:100-(tcp-40)*0.25; if(lat<0)lat=0;
+   tl=(tls<=120)?100:100-(tls-120)*0.2; if(tl<0)tl=0;
+   sp=(spd>=5)?100:spd*20;
+   if(st) sc=succ*50+lat*20+tl*10+sp*20; else sc=succ*60+lat*25+tl*15;
+   if(sc>100)sc=100; printf "%.1f",sc}')
+ echo "$score|$ip|$tcp_avg|$tls_avg|$loss|$spd" >> "$TMP/res"
 }
 
 : > "$TMP/res"
-echo -e "${CYAN}شروع اسکن...${NC}"
+echo -e "${C}Scanning...${N}"
 if [ "$MODE" = 3 ]; then mapfile -t IPLIST < "$FLIST"; N=${#IPLIST[@]}; fi
 for i in $(seq 1 "$N"); do
  if [ "$MODE" = 3 ]; then ip=${IPLIST[$((i-1))]}; else ip=$(rand_ip); fi
- printf "\r${YELLOW}اسکن: %s/%s${NC}   " "$i" "$N"
+ printf "\r${Y}Progress: %s/%s${N}   " "$i" "$N"
  scan_ip "$ip" &
  while [ "$(jobs -r | wc -l)" -ge "$CONC" ]; do sleep 0.2; done
 done
 wait
 echo
 
-if [ ! -s "$TMP/res" ]; then echo -e "${RED}هیچ IP پاسخ‌دهنده‌ای پیدا نشد${NC}"; exit 1; fi
+if [ ! -s "$TMP/res" ]; then echo -e "${R}No responsive IP found.${N}"; exit 1; fi
 sort -t'|' -k1,1rn "$TMP/res" > "$TMP/sorted"
 
-echo -e "${GREEN}${BOLD}✔ نتایج (مرتب بر اساس امتیاز):${NC}"
-printf "${BOLD}%-7s %-18s %-9s %-7s %-10s${NC}\n" "امتیاز" "IP" "پینگ" "لاست" "سرعتMB/s"
+echo -e "${G}${B}Results (sorted by score):${N}"
+printf "${B}%-6s %-18s %-7s %-7s %-6s %-10s${N}\n" "SCORE" "IP" "TCP" "TLS" "LOSS" "SPEED MB/s"
 : > "$OUT"
-while IFS='|' read -r sc ip avg loss spd; do
- if awk -v s="$sc" 'BEGIN{exit !(s>=80)}'; then color=$GREEN; echo "$ip" >> "$OUT"
- elif awk -v s="$sc" 'BEGIN{exit !(s>=60)}'; then color=$YELLOW; else color=$RED; fi
- printf "${color}%-7s %-18s %-9s %-7s %-10s${NC}\n" "$sc" "$ip" "${avg}ms" "${loss}%" "$spd"
+while IFS='|' read -r sc ip tcp tls loss spd; do
+ if awk -v s="$sc" 'BEGIN{exit !(s>=80)}'; then color=$G; echo "$ip" >> "$OUT"
+ elif awk -v s="$sc" 'BEGIN{exit !(s>=60)}'; then color=$Y; else color=$R; fi
+ printf "${color}%-6s %-18s %-7s %-7s %-6s %-10s${N}\n" "$sc" "$ip" "${tcp}ms" "${tls}ms" "${loss}%" "$spd"
 done < "$TMP/sorted"
 
 echo
-echo -e "${GREEN}${BOLD}✔ $(wc -l < "$OUT") IP پاس‌شده ذخیره شد در:${NC} $OUT"
-echo -e "${CYAN}نمایش فایل: cat $OUT${NC}"
+echo -e "${G}${B}✔ $(wc -l < "$OUT") clean IPs saved to:${N} $OUT"
+echo -e "${C}View: cat $OUT${N}"
