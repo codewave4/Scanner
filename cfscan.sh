@@ -1,32 +1,32 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # ===================================================
-#  Cloudflare Clean IP Scanner - Termux Edition (v2)
-#  Xray-optimized: real TCP/TLS/Speed measurement
+#  Cloudflare Clean IP Scanner - Termux Edition (v3)
+#  Core inspired by bgscan: direct TCP/TLS probes
 # ===================================================
-G='\033[1;32m';Y='\033[1;33m';R='\033[1;31m';C='\033[1;36m';B='\033[1m';N='\033[0m'
-DOMAIN="speed.cloudflare.com";PORT=443;TIMEOUT=5
+G='\033[1;32m';Y='\033[1;33m';R='\033[1;31m';C='\033[1;36m';B='\033[1m';NC='\033[0m'
+PORT=443;TIMEOUT=5
 OUT="$HOME/cf_clean_ips.txt";TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
 clear
 echo -e "${C}${B}+==========================================+
 |  Cloudflare Clean IP Scanner - Termux    |
-|  Xray-optimized core (TCP/TLS/Speed)     |
-+==========================================+${N}"
+|  v3: direct TCP/TLS probes (bgscan-like) |
++==========================================+${NC}"
 
 for p in curl gawk grep coreutils; do
-  command -v "$p" >/dev/null 2>&1 || { echo -e "${Y}Installing $p ...${N}"; pkg install -y "$p" >/dev/null 2>&1; }
+  command -v "$p" >/dev/null 2>&1 || { echo -e "${Y}Installing $p ...${NC}"; pkg install -y "$p" >/dev/null 2>&1; }
 done
 
-echo -e "${C}1)${N} Random Cloudflare ranges"
-echo -e "${C}2)${N} Custom range (e.g. 198.41.223)"
-echo -e "${C}3)${N} IP list from file (one per line)"
+echo -e "${C}1)${NC} Random Cloudflare ranges"
+echo -e "${C}2)${NC} Custom range (e.g. 198.41.223)"
+echo -e "${C}3)${NC} IP list from file (one per line)"
 read -p "Select [1/2/3]: " MODE
 PREFIX="";FLIST=""
 [ "$MODE" = 2 ] && read -p "Range prefix (xxx.xxx.xxx): " PREFIX
 [ "$MODE" = 3 ] && read -p "IP list file path: " FLIST
-read -p "Number of IPs [100]: " N;N=${N:-100}
+read -p "Number of IPs [100]: " TOTAL;TOTAL=${TOTAL:-100}
 read -p "Tests per IP [3]: " TESTS;TESTS=${TESTS:-3}
-read -p "Download speed test? y/n [y]: " SPEED;SPEED=${SPEED:-y}
+read -p "Speed-test domain (blank = skip) []: " DD
 read -p "Concurrency [10]: " CONC;CONC=${CONC:-10}
 
 rand_ip(){
@@ -47,16 +47,18 @@ rand_ip(){
  esac
 }
 
-probe(){ # real TCP + TLS + total time; FAIL unless HTTP 200
- local w=$(curl -s -o /dev/null -w '%{http_code} %{time_connect} %{time_appconnect} %{time_total}' \
-   --resolve "$DOMAIN:$PORT:$1" --max-time "$TIMEOUT" "https://$DOMAIN/cdn-cgi/trace" 2>/dev/null)
- [ "${w%% *}" = "200" ] || { echo FAIL;return; }
+probe(){ # direct IP, no blocked SNI; any HTTP reply = alive
+ local w=$(curl -sk -o /dev/null -w '%{http_code} %{time_connect} %{time_appconnect} %{time_total}' \
+   --max-time "$TIMEOUT" "https://$1:$PORT/" 2>/dev/null)
+ local code=${w%% *}
+ case "$code" in 000|"") echo FAIL;return;; esac
  echo "$w" | awk '{printf "%d %d %d", $2*1000+0.5, ($3-$2)*1000+0.5, $4*1000+0.5}'
 }
 
 speed_test(){
- local w=$(curl -s -o /dev/null -w '%{http_code} %{speed_download}' \
-   --resolve "$DOMAIN:$PORT:$1" --max-time 7 "https://$DOMAIN/__down?bytes=3000000" 2>/dev/null)
+ [ -z "$DD" ] && { echo 0.00;return; }
+ local w=$(curl -sk -o /dev/null -w '%{http_code} %{speed_download}' \
+   --resolve "$DD:443:$1" --max-time 7 "https://$DD/__down?bytes=3000000" 2>/dev/null)
  [ "${w%% *}" = "200" ] || { echo 0.00;return; }
  echo "$w" | awk '{printf "%.2f", $2/1048576}'
 }
@@ -74,41 +76,41 @@ scan_ip(){
  local loss=$(( (TESTS-ok)*100/TESTS ))
  local tcp_avg=$(echo $tcps | tr ' ' '\n' | grep -v '^$' | sort -n | awk -v n=$ok 'NR==int((n+1)/2){print}')
  local tls_avg=$((tls_sum/ok)) spd=0.00
- if [ "$SPEED" = y ] && [ $loss -eq 0 ] && [ "$tcp_avg" -le 500 ]; then spd=$(speed_test "$ip"); fi
- local score=$(awk -v ok=$ok -v ts=$TESTS -v tcp=$tcp_avg -v tls=$tls_avg -v spd=$spd -v st=$([ "$SPEED" = y ] && echo 1 || echo 0) 'BEGIN{
+ if [ -n "$DD" ] && [ $loss -eq 0 ] && [ "$tcp_avg" -le 500 ]; then spd=$(speed_test "$ip"); fi
+ local score=$(awk -v ok=$ok -v ts=$TESTS -v tcp=$tcp_avg -v tls=$tls_avg -v spd=$spd -v st=$([ -n "$DD" ] && echo 1 || echo 0) 'BEGIN{
    succ=ok/ts;
    lat=(tcp<=40)?100:100-(tcp-40)*0.25; if(lat<0)lat=0;
    tl=(tls<=120)?100:100-(tls-120)*0.2; if(tl<0)tl=0;
    sp=(spd>=5)?100:spd*20;
-   if(st) sc=succ*50+lat*20+tl*10+sp*20; else sc=succ*60+lat*25+tl*15;
+   if(st) sc=succ*45+lat*20+tl*10+sp*25; else sc=succ*55+lat*25+tl*20;
    if(sc>100)sc=100; printf "%.1f",sc}')
  echo "$score|$ip|$tcp_avg|$tls_avg|$loss|$spd" >> "$TMP/res"
 }
 
 : > "$TMP/res"
-echo -e "${C}Scanning...${N}"
-if [ "$MODE" = 3 ]; then mapfile -t IPLIST < "$FLIST"; N=${#IPLIST[@]}; fi
-for i in $(seq 1 "$N"); do
+echo -e "${C}Scanning...${NC}"
+if [ "$MODE" = 3 ]; then mapfile -t IPLIST < "$FLIST"; TOTAL=${#IPLIST[@]}; fi
+for i in $(seq 1 "$TOTAL"); do
  if [ "$MODE" = 3 ]; then ip=${IPLIST[$((i-1))]}; else ip=$(rand_ip); fi
- printf "\r${Y}Progress: %s/%s${N}   " "$i" "$N"
+ printf "\r${Y}Progress: %d/%d${NC}    " "$i" "$TOTAL"
  scan_ip "$ip" &
  while [ "$(jobs -r | wc -l)" -ge "$CONC" ]; do sleep 0.2; done
 done
 wait
 echo
 
-if [ ! -s "$TMP/res" ]; then echo -e "${R}No responsive IP found.${N}"; exit 1; fi
+if [ ! -s "$TMP/res" ]; then echo -e "${R}No responsive IP found.${NC}"; exit 1; fi
 sort -t'|' -k1,1rn "$TMP/res" > "$TMP/sorted"
 
-echo -e "${G}${B}Results (sorted by score):${N}"
-printf "${B}%-6s %-18s %-7s %-7s %-6s %-10s${N}\n" "SCORE" "IP" "TCP" "TLS" "LOSS" "SPEED MB/s"
+echo -e "${G}${B}Results (sorted by score):${NC}"
+printf "${B}%-6s %-18s %-7s %-7s %-6s %-10s${NC}\n" "SCORE" "IP" "TCP" "TLS" "LOSS" "SPEED MB/s"
 : > "$OUT"
 while IFS='|' read -r sc ip tcp tls loss spd; do
  if awk -v s="$sc" 'BEGIN{exit !(s>=80)}'; then color=$G; echo "$ip" >> "$OUT"
  elif awk -v s="$sc" 'BEGIN{exit !(s>=60)}'; then color=$Y; else color=$R; fi
- printf "${color}%-6s %-18s %-7s %-7s %-6s %-10s${N}\n" "$sc" "$ip" "${tcp}ms" "${tls}ms" "${loss}%" "$spd"
+ printf "${color}%-6s %-18s %-7s %-7s %-6s %-10s${NC}\n" "$sc" "$ip" "${tcp}ms" "${tls}ms" "${loss}%" "$spd"
 done < "$TMP/sorted"
 
 echo
-echo -e "${G}${B}✔ $(wc -l < "$OUT") clean IPs saved to:${N} $OUT"
-echo -e "${C}View: cat $OUT${N}"
+echo -e "${G}${B}✔ $(wc -l < "$OUT") clean IPs saved to:${NC} $OUT"
+echo -e "${C}View: cat $OUT${NC}"
