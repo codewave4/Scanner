@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # ===================================================
-#  Cloudflare Clean IP Scanner - Termux Edition (v4)
+#  RED | Cloudflare Clean IP Scanner - Termux (v6)
 #  Fast core + live green feed
 # ===================================================
 G='\033[1;32m';Y='\033[1;33m';R='\033[1;31m';C='\033[1;36m';B='\033[1m';NC='\033[0m'
@@ -8,10 +8,21 @@ PORT=443;TIMEOUT=3
 OUT="$HOME/cf_clean_ips.txt";TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"; exec 9>&-' EXIT
 clear
-echo -e "${C}${B}+==========================================+
-|  Cloudflare Clean IP Scanner - Termux    |
-|  v4: fast core + live green feed         |
-+==========================================+${NC}"
+echo -e "${R}${B}"
+cat <<'EOF'
+██████╗ ███████╗██████╗
+██╔══██╗██╔════╝██╔══██╗
+██████╔╝█████╗  ██║  ██║
+██╔══██╗██╔══╝  ██║  ██║
+██║  ██║███████╗██████╔╝
+╚═╝  ╚═╝╚══════╝╚═════╝
+EOF
+echo -e "${NC}${B}   ⚡ CLOUDFLARE CLEAN IP SCANNER${NC}"
+echo -e "${C}   Real TCP/TLS Probes | Xray-Optimized Core"
+echo -e "${Y}   Fast • Accurate • Free${NC}"
+echo -e "${C}   t.me/RedProjectX${NC}"
+echo -e "${C}──────────────────────────────────────────────${NC}"
+echo
 
 for p in curl gawk grep coreutils; do
   command -v "$p" >/dev/null 2>&1 || { echo -e "${Y}Installing $p ...${NC}"; pkg install -y "$p" >/dev/null 2>&1; }
@@ -70,7 +81,7 @@ scan_ip(){
   t=$(probe "$ip")
   if [ "$t" = FAIL ]; then
    fails=$((fails+1))
-   [ $fails -ge 2 ] && break   # early bail: 2 fails = dead IP
+   [ $fails -ge 2 ] && break
    continue
   fi
   read -r tcp tls tot <<< "$t"
@@ -88,7 +99,6 @@ scan_ip(){
    sp=(spd>=5)?100:spd*20;
    if(st) sc=succ*45+lat*20+tl*10+sp*25; else sc=succ*55+lat*25+tl*20;
    if(sc>100)sc=100; printf "%.1f",sc}')
- # live green feed
  if awk -v s="$score" 'BEGIN{exit !(s>=80)}'; then
   echo -e "${G}✔ $ip | TCP ${tcp_avg}ms | SCORE $score${NC}"
  fi
@@ -99,7 +109,6 @@ scan_ip(){
 echo -e "${C}Scanning... (green = clean IP found)${NC}"
 if [ "$MODE" = 3 ]; then mapfile -t IPLIST < "$FLIST"; TOTAL=${#IPLIST[@]}; fi
 
-# FIFO semaphore: exact concurrency, zero polling delay
 mkfifo "$TMP/fifo"; exec 9<>"$TMP/fifo"
 for i in $(seq 1 "$CONC"); do echo >&9; done
 
@@ -126,5 +135,5 @@ while IFS='|' read -r sc ip tcp tls loss spd; do
 done < "$TMP/sorted"
 
 echo
-echo -e "${G}${B}✔ $(wc -l < "$OUT") clean IPs saved to:${NC} $OUT"
+echo -e "${R}${B}RED${NC} ${G}✔ $(wc -l < "$OUT") clean IPs saved to:${NC} $OUT"
 echo -e "${C}View: cat $OUT${NC}"
