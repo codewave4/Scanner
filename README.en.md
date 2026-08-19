@@ -1,4 +1,6 @@
-<div align="center">
+[![فارسی](https://img.shields.io/badge/🌐-فارسی-22c55e?style=for-the-badge)](README.md)
+[![Telegram](https://img.shields.io/badge/✈️-RedProjectX-229ED9?style=for-the-badge&logo=telegram)](https://t.me/RedProjectX)
+[![Version](https://img.shields.io/badge/Version-v11-red?style=for-the-badge)](cfscan.sh)
 
 ```
 ██████╗ ███████╗██████╗
@@ -6,19 +8,12 @@
 ██████╔╝█████╗  ██║  ██║
 ██╔══██╗██╔══╝  ██║  ██║
 ██║  ██║███████╗██████╔╝
-╚═╝  ╚═╝╚══════╝╚═════╝
+═╝  ╚═╝╚══════╝╚═════╝
 ```
 
 # 🔴 RED — Cloudflare Clean IP Scanner (Termux)
 
 **Find the cleanest, fastest & most stable Cloudflare IPs — right in Android Termux**
-
-[![فارسی](https://img.shields.io/badge/🌐_خواندن-فارسی-22c55e?style=for-the-badge)](README.md)
-[![Telegram](https://img.shields.io/badge/✈️-RedProjectX-229ED9?style=for-the-badge&logo=telegram)](https://t.me/RedProjectX)
-[![Version](https://img.shields.io/badge/Version-v11-red?style=for-the-badge)]()
-[![License](https://img.shields.io/badge/License-MIT-green?style=for-the-badge)]()
-
-</div>
 
 ---
 
@@ -43,15 +38,15 @@ chmod +x cfscan.sh
 
 | Feature | Description |
 |---|---|
-| 🌐 **Round-Robin all 12 ranges** | Every official Cloudflare range tested equally |
-| 📶 **TCPing ×4** | 4 TCP pings per IP (Loss / Delay / Jitter) |
-| 🔌 **Multi-port test** | 443 / 2053 / 2083 / 8443 + best-port suggestion |
-| ⚡ **Real DL/UL speed** | Light download/upload test for top 10 IPs |
-| ⭐ **Xray verify** | Real test via Xray core with your own config (optional) |
-| 🏆 **Best-first ranking** | Sorted by Loss + Delay + Jitter + Speed |
-| 💾 **Resume** | Recently-tested IPs skipped for 6 hours |
-| 🛑 **Smart Ctrl+C** | Stop anytime + show results found so far |
-| 🟢 **Live feed** | Clean IPs printed green in real time |
+| 🌐 Round-Robin all 12 ranges | Every official Cloudflare range tested equally |
+| 📶 TCPing ×4 | 4 TCP pings per IP (Loss / Delay / Jitter) |
+| 🔌 Multi-port test | 443 / 2053 / 2083 / 8443 + best-port suggestion |
+| ⚡ Real DL/UL speed | Light download/upload test for top 10 IPs |
+| ⭐ Xray verify | Real test via Xray core with your own config (optional) |
+| 🏆 Best-first ranking | Sorted by Loss + Delay + Jitter + Speed |
+| 💾 Resume | Recently-tested IPs skipped for 6 hours |
+| 🛑 Smart Ctrl+C | Stop anytime + show results found so far |
+| 🟢 Live feed | Clean IPs printed green in real time |
 
 ---
 
@@ -78,7 +73,7 @@ RANK IP               PORT   LOSS   DELAY    JIT     DOWN   UP     SCORE
 2.   188.114.99.144   2053   25%    174ms    1060ms  0.00   0.00   53.7
 ```
 
-- 🟢 **Green** = score ≥ 60 → saved to `~/cf_clean_ips.txt` (best first)
+- 🟢 Green = score ≥ 60 → saved to `~/cf_clean_ips.txt` (best first)
 - ⭐ = verified via Xray
 
 ---
@@ -86,7 +81,7 @@ RANK IP               PORT   LOSS   DELAY    JIT     DOWN   UP     SCORE
 ## 💡 Notes
 
 - Speed test uses ~7MB per top IP; answer `n` if on limited data
-- Xray mode downloads the core once (~25MB) and works with **vless/TLS** configs only
+- Xray mode downloads the core once (~25MB) and works with vless/TLS configs only
 - Lower Jitter = more stable connection, even if Delay is slightly higher
 
 ---
@@ -96,8 +91,4 @@ RANK IP               PORT   LOSS   DELAY    JIT     DOWN   UP     SCORE
 - ✈️ Telegram: [@RedProjectX](https://t.me/RedProjectX)
 - 📱 Recommended client: [PattNG](https://github.com/patterniha/PattNG/releases)
 
-<div align="center">
-
 **Built with ❤️ to bypass restrictions**
-
-</div>
