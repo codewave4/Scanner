@@ -1,16 +1,16 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # ===================================================
-#  Cloudflare Clean IP Scanner - Termux Edition (v3)
-#  Core inspired by bgscan: direct TCP/TLS probes
+#  Cloudflare Clean IP Scanner - Termux Edition (v4)
+#  Fast core + live green feed
 # ===================================================
 G='\033[1;32m';Y='\033[1;33m';R='\033[1;31m';C='\033[1;36m';B='\033[1m';NC='\033[0m'
-PORT=443;TIMEOUT=5
+PORT=443;TIMEOUT=3
 OUT="$HOME/cf_clean_ips.txt";TMP=$(mktemp -d)
-trap 'rm -rf "$TMP"' EXIT
+trap 'rm -rf "$TMP"; exec 9>&-' EXIT
 clear
 echo -e "${C}${B}+==========================================+
 |  Cloudflare Clean IP Scanner - Termux    |
-|  v3: direct TCP/TLS probes (bgscan-like) |
+|  v4: fast core + live green feed         |
 +==========================================+${NC}"
 
 for p in curl gawk grep coreutils; do
@@ -27,7 +27,7 @@ PREFIX="";FLIST=""
 read -p "Number of IPs [100]: " TOTAL;TOTAL=${TOTAL:-100}
 read -p "Tests per IP [3]: " TESTS;TESTS=${TESTS:-3}
 read -p "Speed-test domain (blank = skip) []: " DD
-read -p "Concurrency [10]: " CONC;CONC=${CONC:-10}
+read -p "Concurrency [20]: " CONC;CONC=${CONC:-20}
 
 rand_ip(){
  if [ -n "$PREFIX" ]; then echo "$PREFIX.$((1+RANDOM%254))";return; fi
@@ -47,7 +47,7 @@ rand_ip(){
  esac
 }
 
-probe(){ # direct IP, no blocked SNI; any HTTP reply = alive
+probe(){
  local w=$(curl -sk -o /dev/null -w '%{http_code} %{time_connect} %{time_appconnect} %{time_total}' \
    --max-time "$TIMEOUT" "https://$1:$PORT/" 2>/dev/null)
  local code=${w%% *}
@@ -64,39 +64,53 @@ speed_test(){
 }
 
 scan_ip(){
- local ip=$1 ok=0 tcps="" tls_sum=0 t tcp tls tot
+ local ip=$1 ok=0 att=0 fails=0 tcps="" tls_sum=0 t tcp tls tot
  for i in $(seq 1 "$TESTS"); do
+  att=$((att+1))
   t=$(probe "$ip")
-  if [ "$t" != FAIL ]; then
-   read -r tcp tls tot <<< "$t"
-   ok=$((ok+1)); tcps="$tcps $tcp"; tls_sum=$((tls_sum+tls))
+  if [ "$t" = FAIL ]; then
+   fails=$((fails+1))
+   [ $fails -ge 2 ] && break   # early bail: 2 fails = dead IP
+   continue
   fi
+  read -r tcp tls tot <<< "$t"
+  ok=$((ok+1)); tcps="$tcps $tcp"; tls_sum=$((tls_sum+tls))
  done
  [ $ok -eq 0 ] && return
- local loss=$(( (TESTS-ok)*100/TESTS ))
+ local loss=$(( (att-ok)*100/att ))
  local tcp_avg=$(echo $tcps | tr ' ' '\n' | grep -v '^$' | sort -n | awk -v n=$ok 'NR==int((n+1)/2){print}')
  local tls_avg=$((tls_sum/ok)) spd=0.00
  if [ -n "$DD" ] && [ $loss -eq 0 ] && [ "$tcp_avg" -le 500 ]; then spd=$(speed_test "$ip"); fi
- local score=$(awk -v ok=$ok -v ts=$TESTS -v tcp=$tcp_avg -v tls=$tls_avg -v spd=$spd -v st=$([ -n "$DD" ] && echo 1 || echo 0) 'BEGIN{
-   succ=ok/ts;
+ local score=$(awk -v ok=$ok -v att=$att -v tcp=$tcp_avg -v tls=$tls_avg -v spd=$spd -v st=$([ -n "$DD" ] && echo 1 || echo 0) 'BEGIN{
+   succ=ok/att;
    lat=(tcp<=40)?100:100-(tcp-40)*0.25; if(lat<0)lat=0;
    tl=(tls<=120)?100:100-(tls-120)*0.2; if(tl<0)tl=0;
    sp=(spd>=5)?100:spd*20;
    if(st) sc=succ*45+lat*20+tl*10+sp*25; else sc=succ*55+lat*25+tl*20;
    if(sc>100)sc=100; printf "%.1f",sc}')
+ # live green feed
+ if awk -v s="$score" 'BEGIN{exit !(s>=80)}'; then
+  echo -e "${G}✔ $ip | TCP ${tcp_avg}ms | SCORE $score${NC}"
+ fi
  echo "$score|$ip|$tcp_avg|$tls_avg|$loss|$spd" >> "$TMP/res"
 }
 
 : > "$TMP/res"
-echo -e "${C}Scanning...${NC}"
+echo -e "${C}Scanning... (green = clean IP found)${NC}"
 if [ "$MODE" = 3 ]; then mapfile -t IPLIST < "$FLIST"; TOTAL=${#IPLIST[@]}; fi
+
+# FIFO semaphore: exact concurrency, zero polling delay
+mkfifo "$TMP/fifo"; exec 9<>"$TMP/fifo"
+for i in $(seq 1 "$CONC"); do echo >&9; done
+
 for i in $(seq 1 "$TOTAL"); do
  if [ "$MODE" = 3 ]; then ip=${IPLIST[$((i-1))]}; else ip=$(rand_ip); fi
- printf "\r${Y}Progress: %d/%d${NC}    " "$i" "$TOTAL"
- scan_ip "$ip" &
- while [ "$(jobs -r | wc -l)" -ge "$CONC" ]; do sleep 0.2; done
+ printf "\r${Y}Progress: %d/%d${NC}          " "$i" "$TOTAL"
+ read -u 9
+ { scan_ip "$ip"; echo >&9; } &
 done
 wait
+exec 9>&-
 echo
 
 if [ ! -s "$TMP/res" ]; then echo -e "${R}No responsive IP found.${NC}"; exit 1; fi
